@@ -1,7 +1,14 @@
+<<<<<<< HEAD
 Control	<lot name>	Reference gene	<gene name>	Default = Control : 1st lot, Reference gene : 1st gene	
 Efficiency	Default=1.85				
 Lot	Sample	Reference gene	Gene 1	Gene 2	...
 Control	1	<Quantification Cycle, NA if value is not numeric>			
+=======
+Control	<lot name>	Housekeeping gene	<gene name>	Default = Control : 1st lot, Housekeeping gene : 1st gene	
+Efficiency	Default=1.85				
+Lot	Sample	Housekeeping gene	Gene 1	Gene 2	...
+Control	1	<Cycle threshold, NA if value is not numeric>			
+>>>>>>> 353a1b52e461f9d71c571c7a9e279b265a334848
 Control	2				
 Control	3				
 1 Experimental	4				
@@ -10,4 +17,8 @@ Control	3
 2 Experimental	7				
 2 Experimental	8				
 2 Experimental	9				
+<<<<<<< HEAD
 ...					
+=======
+...					
+>>>>>>> 353a1b52e461f9d71c571c7a9e279b265a334848
