@@ -1,0 +1,13 @@
+Control	<lot name>	Reference gene	<gene name>	Default = Control : 1st lot, Reference gene : 1st gene	
+Efficiency	Default=1.85				
+Lot	Sample	Reference gene	Gene 1	Gene 2	...
+Control	1	<Quantification Cycle, NA if value is not numeric>			
+Control	2				
+Control	3				
+1 Experimental	4				
+1 Experimental	5				
+1 Experimental	6				
+2 Experimental	7				
+2 Experimental	8				
+2 Experimental	9				
+...					
