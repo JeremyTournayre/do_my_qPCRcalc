@@ -285,15 +285,9 @@ foreach (sort {$a <=> $b} keys %list_entete){
 	$worksheet->write( $row, $col, "lot");$col++;	
 	$worksheet->write( $row, $col, "name");$col++;							
 	$worksheet->write( $row, $col, "Log2");$col++;
-<<<<<<< HEAD
 	$worksheet->write( $row, $col, "Quantification Cycle (Cq)");$col++;
 	$worksheet->write( $row, $col, "mean ".$lot_controle." Cq");$col++;							
 	$worksheet->write( $row, $col, "delta Cq");$col++;
-=======
-	$worksheet->write( $row, $col, "Cycle threshold (Ct)");$col++;
-	$worksheet->write( $row, $col, "mean ".$lot_controle." Ct");$col++;							
-	$worksheet->write( $row, $col, "delta Ct");$col++;
->>>>>>> 353a1b52e461f9d71c571c7a9e279b265a334848
 	my $eff="";
 	if (defined($efficiency{$entete})){
 	  $eff=$efficiency{$entete};
@@ -302,11 +296,7 @@ foreach (sort {$a <=> $b} keys %list_entete){
 	  $eff=1.85;
 	}
 	$worksheet->write( $row, $col, "qty (eff:".$eff.")");$col++;
-<<<<<<< HEAD
 	$worksheet->write( $row, $col, "reference gene ".$entete_norma_val);$col++;
-=======
-	$worksheet->write( $row, $col, "housekeeping gene ".$entete_norma_val);$col++;
->>>>>>> 353a1b52e461f9d71c571c7a9e279b265a334848
 	$row++;	$col=0;
 	my $chart     = $workbook->add_chart( embedded => 1  ,type => 'column' );
 	$chart->show_blanks_as( 'span' );

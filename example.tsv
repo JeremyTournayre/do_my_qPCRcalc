@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 Control	A	Reference gene	Nono	Default = Control : 1st lot, Reference gene : 1st gene			
-=======
-Control	A	Housekeeping gene	Nono	Default = Control : 1st lot, Housekeeping gene : 1st gene			
->>>>>>> 353a1b52e461f9d71c571c7a9e279b265a334848
 Efficiency	Default=1.85			1.90	1.90	1.95	
 Lot	Sample	Nono	Dgat2	AOC3	Hadh	Lpgat1	Decr1
 A	a12	20.96	21.77	20.84	20.1	22.11	20.36
@@ -30,8 +26,4 @@ D	d197	20.96	22.88	21.82	21.02	21.88	21.17
 D	d203	20.98	20.48	19.99	20.15	21.88	20.74
 D	d204	20.77	20.37	19.62	19.77	21.21	20
 D	d217	21.09	20.85	19.24	20.53	21.14	21.2
-<<<<<<< HEAD
 D	d218	22.83	21.76	20.96	21.04	22.34	21.63
-=======
-D	d218	22.83	21.76	20.96	21.04	22.34	21.63
->>>>>>> 353a1b52e461f9d71c571c7a9e279b265a334848
