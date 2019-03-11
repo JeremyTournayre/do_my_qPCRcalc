@@ -1,6 +1,6 @@
 # do_my_qPCRcalc
 
-Tools required to run do_my_qPCRcalc
+Tools required to run do_my_qPCRcalc :
 Apache
 PHP
 ssconvert
