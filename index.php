@@ -1,10 +1,19 @@
 <?php
-   if(isset($_POST['example']) || isset($_POST['template'])){
+   if(isset($_POST['example']) || isset($_POST['template']) || isset($_POST['exampods']) || isset($_POST['exampxlsx'])){
 	if(isset($_POST['example'])){
 	  $file="example.tsv";
 	}
-	else{
+	else if(isset($_POST['template'])){
 	  $file="template.tsv";
+	}
+	else if(isset($_POST['exampods'])){
+	  $file="example.ods";
+	}
+	else if(isset($_POST['exampxlsx'])){
+	  $file="example.xlsx";
+	}	
+	else{
+	exit;
 	}
 	$length   = sprintf("%u", filesize($file));
 	$basename_file=basename($file);
@@ -25,7 +34,16 @@
 	  $errors= array();
 	  
 	  $file_name = $_FILES['qPCRfile']['name'];
-	 
+	  $explod=explode('.',$file_name);
+	  $new_file_name="";
+	  for ($i = 0; $i < (count($explod)-1); $i++) {
+	      $new_file_name=$new_file_name.$explod[$i].'.';
+	  }
+	  substr($new_file_name, 0, -1);
+	  if ($new_file_name == ""){
+	    $new_file_name=$file_name;
+	  }
+	  $file_name=$new_file_name;
 	  $file_name=preg_replace('/[^A-Za-z0-9\-]/', '', $file_name); // Removes special chars.
 	  // print $file_name;
 	  $file_size =$_FILES['qPCRfile']['size'];
@@ -47,8 +65,9 @@
 		  if (!file_exists($file_upload)) {
 		      move_uploaded_file($file_tmp,$file_upload);
 		      exec("perl qPCR_2_graph.pl $file_name");
-		      $file="download/".$file_name.".xlsx";
-	 	      unlink($file_upload);
+		      $file="download/".$file_name."-dmqc.xlsx";
+		      unlink($file_upload);
+		      unlink($file_upload.'.txt');
 			if (file_exists($file)) {
 			    $length   = sprintf("%u", filesize($file));
 			    $basename_file=basename($file);
@@ -64,6 +83,7 @@
 			    set_time_limit(0);
 			    readfile($file);
 			    unlink($file);
+
 				}
 				else{
 					echo "Failed";
@@ -77,8 +97,18 @@
 ?>
 <html>
 <style>
+.line-separator{
+    background:black;
+
+    padding-left:5;
+    padding-right:5;
+    margin-right:5px;
+    margin-left:5px;
+}
+
 
 .button{
+
 font: 400 15px Arial;    
   background:#1AAB8A;
   color:#fff;
@@ -87,14 +117,23 @@ font: 400 15px Arial;
   cursor:pointer;
   transition:800ms ease all;
   outline:none;
-  width:220px;
+}
+
+.buttonred{
+
+font: 400 15px Arial;    
+  background:#ff5050;
+  color:#fff;
+  border:none;
+  position:relative;
+  cursor:pointer;
+  transition:800ms ease all;
+  outline:none;
 }
 
 .myLabel {
-  float:left;
   text-align:center;
   padding:10px;
-  margin-right:10px;
 }
 .desc {
   padding-top:40px;
@@ -105,15 +144,16 @@ font: 400 15px Arial;
 
 .temp
 {
-  float:left;
-  margin-right:10px;
+
 }
 
 
 .maDiv {
-  margin:0 auto;padding-top:20px;max-width: 1000px;min-width:600px;
+ padding-top:10;
+  margin:0 auto;width:800px;
+    text-align:center;
 }
-@media screen and (max-width: 1000px) {
+@media screen and (max-width: 800px) {
   .button {
     width:100%;
     margin-bottom:15px;
@@ -121,7 +161,32 @@ font: 400 15px Arial;
     text-align: left;
     font-size:50px;
   }
+    .buttonred {
+    width:100%;
+    margin-bottom:15px;
+    display: block;
+    text-align: left;
+    font-size:50px;
+  }
 
+.exception{
+
+}
+  
+.line-separator{
+    background:black;
+    margin:0;
+    padding-top:15px;
+    padding-bottom:5px;
+    padding-left:400;
+    padding-right:400;
+ 
+}
+
+  .titrebutton { 
+      font-size:50px;
+  }
+  
 .myLabel {
   text-align:left;
 }
@@ -169,6 +234,31 @@ label{
   bottom:0;
 }
 .button:hover:before,.button:hover:after{
+  width:100%;
+  transition:800ms ease all;
+}
+
+.buttonred:hover{
+  background:#fff;
+  color:#ff5050;
+}
+.buttonred:before,.buttonred:after{
+  content:'';
+  position:absolute;
+  top:0;
+  right:0;
+  height:2px;
+  width:0;
+  background: #ff5050;
+  transition:400ms ease all;
+}
+.buttonred:after{
+  right:inherit;
+  top:inherit;
+  left:0;
+  bottom:0;
+}
+.buttonred:hover:before,.buttonred:hover:after{
   width:100%;
   transition:800ms ease all;
 }
@@ -269,16 +359,11 @@ form{
   </script>
 
   <div class="maDiv">
+    
     <form class="temp" action="" method="POST" enctype="multipart/form-data">
-      <button style='padding:10px;' class="button" type="submit" id="example" name= "example">Example input file</button>
-    </form>
-    <form class="temp" action="" method="POST" enctype="multipart/form-data">  
-      <button style='padding:10px;' class="button" type="submit" id="template" name= "template">Template</button>
-    </form>
-    <form action="" method="POST" enctype="multipart/form-data">
-      <label class="myLabel button" for="file-upload" >Input file</label>
-      <input id="file-upload" type="file" name="qPCRfile" style="display:none;">
-      <button class="button" type="submit" style='padding:10px;'>Submit</button>
+    <button style='padding:10px;' class="button" type="submit" id="template" name= "template">Template</button><span class="line-separator "></span ><button style='padding:10px;' class="button" type="submit" id="example" name= "example">Example.tsv</button>
+    <button style='padding:10px;' class="button" type="submit" id="exampxlsx" name= "exampxlsx">Example.xlsx</button>
+    <button style='padding:10px;' class="button" type="submit" id="exampods" name= "exampods">Example.ods</button><br><br><label class="myLabel buttonred" for="file-upload" style='font-size:20px;' >Input file (.tsv, .xlsx, .ods)</label><input id="file-upload" type="file" name="qPCRfile" style="display:none;"><span  class="line-separator "></span ><button class="buttonred" type="submit" style='padding:10px;font-size:20px'>Submit</button>
     </form>
   </div>
    
@@ -322,6 +407,23 @@ form{
   });
    
 </script>
+  <div class="desc" >
+    <button style='padding:10px' class='button' type="submit" id="License" name= "License">License agreement</button></br>
+  </div>
+  <div hidden id="Licensediv" name= "Licensediv" >
+    <div class="License">
+Do my qPCR calculations is distributed under <a href="https://www.gnu.org/copyleft/gpl.html">the GNU public license</a>
+The source codes of Do my qPCR calculations will be freely available for non-commercial use on GitHub, and are provided as-is without any warranty regarding reliability, accuracy and fitness for purpose. The user assumes the entire risk of the use of this program and the author can not be hold responsible of any kind of problems. 
+    </div>  
+<script>
+   
+  $("#License").click(function(){
+      $("#Licensediv").toggle( "slow" );
+  });
+   
+</script>
+	
+
 </html>
 <?php
   }

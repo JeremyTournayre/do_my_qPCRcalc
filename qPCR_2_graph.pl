@@ -15,7 +15,29 @@ sub log2 {
 	return($t);
 }
 
+
+
+
+#Test fichier Excel ou Text
+my $text_or_excel="txt";
 open (F,"upload/".$ARGV[0]);
+my $test=<F>;
+if ($test=~m/^PK/){
+  $text_or_excel="xls";
+}
+close(F);
+#Si fichier excel conversion en .txt pour pouvoir utiliser la suite du script
+my $in="upload/".$ARGV[0];
+if ($text_or_excel eq "xls"){
+  $in="upload/".$ARGV[0];
+  my $out="upload/".$ARGV[0].".txt";
+  `ssconvert -O 'separator="	" format=raw quote=""' $in $out`;
+  $in=$out;
+}
+
+
+
+open (F,$in);
 my %lots;
 my %efficiency;
 my %entete;
@@ -36,10 +58,13 @@ my $lot_controle_choose="";
 my $entete_norma_val_choose="";
 while (<F>){
 	chomp($_);
+	#$_=~s/\t( )+\t//g;
+	#$_=~s/\t\t/\t/g;
+	#$_=~s/\t\t/\t/g;
 	my @tab=split("\t",$_);
 	#mise en place du groupe 1 arbitraire
 	unshift(@tab,1);
-	if ($_=~m/^Lot/i){
+	if ($_=~m/^Group/i){
 		my $i=0;
 		%entete=();
 		shift(@tab);shift(@tab);shift(@tab);
@@ -107,6 +132,7 @@ while (<F>){
 		  }
 		}
 		$souris=$tmp_souris;
+		#print $souris."\n";
 		$list_sample{$souris}=1;
 		for (my $i=0;$i<=($#tab+1);$i++){
 			my $option="";
@@ -118,7 +144,9 @@ while (<F>){
 				$entete_sansoption =~ s/^\s+//;$entete_sansoption =~ s/\s+$//;
 				$entete_sansoption =~    s/[\W]+//g;
 				$option =~ s/\s+//;
+
 				if ($tab[$i] ne "" && $tab[$i] =~ m/-?\d+\.?,?\d*/){
+					#print '$data{'.$entete_sansoption.'}{'.$lot.'}{'.$groupe.'}{'.$souris.'}{'.$option.'}{'."Ct".'}='.$tab[$i]."\n";
 					$data{$entete_sansoption}{$lot}{$groupe}{$souris}{$option}{"Ct"}=$tab[$i];
 					if ($lot eq $lot_controle){
 						if (!defined($moyenne_A{$entete_sansoption}{$groupe}{$option}{"tot"})){
@@ -132,6 +160,7 @@ while (<F>){
 					}
 				}
 				else{
+					#print '$data{'.$entete_sansoption.'}{'.$lot.'}{'.$groupe.'}{'.$souris.'}{'.$option.'}{'."Ct".'}'.'='."NA";
 					$data{$entete_sansoption}{$lot}{$groupe}{$souris}{$option}{"Ct"}="NA";	
 				}				
 
@@ -158,7 +187,7 @@ if (defined($entetes{$entete_norma_val_choose})){
   $entete_norma{$entete_norma_val}=1;
 }
 
-my $workbook  = Excel::Writer::XLSX->new("download/".$ARGV[0].".xlsx");
+my $workbook  = Excel::Writer::XLSX->new("download/".$ARGV[0]."-dmqc.xlsx");
 my $worksheet;
 
 #calcul du delta CT et de la qté
@@ -282,11 +311,11 @@ foreach (sort {$a <=> $b} keys %list_entete){
 	my $tmp_entete=$entete;
 	$tmp_entete =~ s/\s+//g;	
 	$worksheet = $workbook->add_worksheet($tmp_entete);	
-	$worksheet->write( $row, $col, "lot");$col++;	
+	$worksheet->write( $row, $col, "group");$col++;	
 	$worksheet->write( $row, $col, "name");$col++;							
 	$worksheet->write( $row, $col, "Log2");$col++;
 	$worksheet->write( $row, $col, "Quantification Cycle (Cq)");$col++;
-	$worksheet->write( $row, $col, "mean ".$lot_controle." Cq");$col++;							
+	$worksheet->write( $row, $col, "Average ".$lot_controle." Cq");$col++;							
 	$worksheet->write( $row, $col, "delta Cq");$col++;
 	my $eff="";
 	if (defined($efficiency{$entete})){
@@ -295,12 +324,12 @@ foreach (sort {$a <=> $b} keys %list_entete){
 	else{
 	  $eff=1.85;
 	}
-	$worksheet->write( $row, $col, "qty (eff:".$eff.")");$col++;
-	$worksheet->write( $row, $col, "reference gene ".$entete_norma_val);$col++;
+	$worksheet->write( $row, $col, "Quantification (efficiency: ".$eff.")");$col++;
+	$worksheet->write( $row, $col, "Normalization by ".$entete_norma_val);$col++;
 	$row++;	$col=0;
 	my $chart     = $workbook->add_chart( embedded => 1  ,type => 'column' );
 	$chart->show_blanks_as( 'span' );
-	$chart->set_y_axis( name => 'Normalized qty log2' );
+	$chart->set_y_axis( name => 'Normalized quantification log2' );
 	$chart->set_x_axis( name => 'Sample' );	
 	my $string=' [ ';
 	my $string2=' [ ';
@@ -370,6 +399,7 @@ $string.='{ fill => { color => \''.$colors{$lot}.'\' }},';
 							$worksheet->write( $row, $col, $lot);$col++;
 							$worksheet->write( $row, $col, $souris);$col++;							
 							$worksheet->write( $row, $col, $normalisation);$col++;
+							$data{$entete}{$lot}{$groupe}{$souris}{$tmp_option}{"Ct"}=~s/,/\./g;
 							$worksheet->write_number( $row, $col, $data{$entete}{$lot}{$groupe}{$souris}{$tmp_option}{"Ct"});$col++;
 							my $moyenne_A_delta_ct=($moyenne_A{$entete}{$groupe}{$tmp_option}{"tot"}/$moyenne_A{$entete}{$groupe}{$tmp_option}{"nb"});
 							$worksheet->write( $row, $col, $moyenne_A_delta_ct);$col++;							
@@ -561,7 +591,7 @@ $string.='{ fill => { color => \''.$colors{$lot}.'\' }},';
 
 	$chart     = $workbook->add_chart( embedded => 1  ,type => 'column' );
 	$chart->show_blanks_as( 'span' );
-	$chart->set_y_axis( name => 'Normalized qty' );
+	$chart->set_y_axis( name => 'Normalized quantification' );
 	$chart->set_x_axis( name => 'Sample' );
 	$chart->add_series(
 	    categories => '='.$tmp_entete.'!$B$2:$B$'.($row),
@@ -584,18 +614,18 @@ $string.='{ fill => { color => \''.$colors{$lot}.'\' }},';
 		if ($groupe eq "1"){
 			next;
 		}
-		#Mean
-		$worksheet = $workbook->add_worksheet($tmp_entete.'_Mean');	
+		#Average
+		$worksheet = $workbook->add_worksheet($tmp_entete.'_Average');	
 		$chart     = $workbook->add_chart( embedded => 1  ,type => 'column' );
 		$chart->show_blanks_as( 'span' );
-		$chart->set_y_axis( name => 'Normalized qty' );
-		$chart->set_x_axis( name => 'Lot' );
+		$chart->set_y_axis( name => 'Normalized quantification' );
+		$chart->set_x_axis( name => 'Group' );
 		$row=0;$col=0;		
-		$worksheet->write( $row, $col, "Lot");$col++;							
-		$worksheet->write( $row, $col, "Mean");$col++;							
+		$worksheet->write( $row, $col, "Group");$col++;							
+		$worksheet->write( $row, $col, "Average");$col++;							
 		$worksheet->write( $row, $col, "SEM");$col++;				
 		$worksheet->write( $row, $col, "pvalue");$col++;			
-		$worksheet->write( $row, $col, "Mean Log2");$col++;		
+		$worksheet->write( $row, $col, "Average Log2");$col++;		
 		$worksheet->write( $row, $col, "SEM Log2");$col++;											
 		$worksheet->write( $row, $col, "pvalue Log2");$col++;			
 		$row++;$col=0;
@@ -676,12 +706,12 @@ $string.='{ fill => { color => \''.$colors{$lot}.'\' }},';
 		my @list;
 		eval '@list = ( '.$string3.');';		
 		$chart->add_series(
-		    categories => '='.$tmp_entete.'_Mean!$A$2:$A$'.($row),
-		    values     => '='.$tmp_entete.'_Mean!$B$2:$B$'.($row),
+		    categories => '='.$tmp_entete.'_Average!$A$2:$A$'.($row),
+		    values     => '='.$tmp_entete.'_Average!$B$2:$B$'.($row),
 			y_error_bars => {
 			    type         => 'custom',
-				plus_values  => '='.$tmp_entete.'_Mean!$C$2:$C$'.($row),
-			    minus_values => '='.$tmp_entete.'_Mean!$C$2:$C$'.($row),
+				plus_values  => '='.$tmp_entete.'_Average!$C$2:$C$'.($row),
+			    minus_values => '='.$tmp_entete.'_Average!$C$2:$C$'.($row),
 			},
 			points => 
 			 @list
@@ -690,15 +720,16 @@ $string.='{ fill => { color => \''.$colors{$lot}.'\' }},';
 		$worksheet->insert_chart( 'H1', $chart, 2, 3, 2, 2 ); 
 		$chart     = $workbook->add_chart( embedded => 1  ,type => 'column' );
 		$chart->show_blanks_as( 'span' );
-		$chart->set_y_axis( name => 'Normalized qty log2' );
-		$chart->set_x_axis( name => 'Lot' );	
+		$chart->set_y_axis( name => 'Normalized quantification log2' );
+		$chart->set_x_axis( name => 'Group' );	
 		$chart->add_series(
-		    categories => '='.$tmp_entete.'_Mean!$A$2:$A$'.($row),
-		    values     => '='.$tmp_entete.'_Mean!$E$2:$E$'.($row),
+		    categories => '='.$tmp_entete.'_Average!$A$2:$A$'.($row),
+		    data_labels => {value => 0},
+		    values     => '='.$tmp_entete.'_Average!$E$2:$E$'.($row),
 			y_error_bars => {
 			    type         => 'custom',
-				plus_values  => '='.$tmp_entete.'_Mean!$F$2:$F$'.($row),
-			    minus_values => '='.$tmp_entete.'_Mean!$F$2:$F$'.($row),
+				plus_values  => '='.$tmp_entete.'_Average!$F$2:$F$'.($row),
+			    minus_values => '='.$tmp_entete.'_Average!$F$2:$F$'.($row),
 			},
 			points => 
 			 @list
