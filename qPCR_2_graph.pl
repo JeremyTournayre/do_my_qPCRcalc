@@ -313,7 +313,6 @@ foreach (sort {$a <=> $b} keys %list_entete){
 	$worksheet = $workbook->add_worksheet($tmp_entete);	
 	$worksheet->write( $row, $col, "group");$col++;	
 	$worksheet->write( $row, $col, "name");$col++;							
-	$worksheet->write( $row, $col, "Log2");$col++;
 	$worksheet->write( $row, $col, "Quantification Cycle (Cq)");$col++;
 	$worksheet->write( $row, $col, "Average ".$lot_controle." Cq");$col++;							
 	$worksheet->write( $row, $col, "delta Cq");$col++;
@@ -326,6 +325,7 @@ foreach (sort {$a <=> $b} keys %list_entete){
 	}
 	$worksheet->write( $row, $col, "Quantification (efficiency: ".$eff.")");$col++;
 	$worksheet->write( $row, $col, "Normalization by ".$entete_norma_val);$col++;
+	$worksheet->write( $row, $col, "Log2");$col++;	
 	$row++;	$col=0;
 	my $chart     = $workbook->add_chart( embedded => 1  ,type => 'column' );
 	$chart->show_blanks_as( 'span' );
@@ -398,7 +398,6 @@ $string.='{ fill => { color => \''.$colors{$lot}.'\' }},';
 							}
 							$worksheet->write( $row, $col, $lot);$col++;
 							$worksheet->write( $row, $col, $souris);$col++;							
-							$worksheet->write( $row, $col, $normalisation);$col++;
 							$data{$entete}{$lot}{$groupe}{$souris}{$tmp_option}{"Ct"}=~s/,/\./g;
 							$worksheet->write_number( $row, $col, $data{$entete}{$lot}{$groupe}{$souris}{$tmp_option}{"Ct"});$col++;
 							my $moyenne_A_delta_ct=($moyenne_A{$entete}{$groupe}{$tmp_option}{"tot"}/$moyenne_A{$entete}{$groupe}{$tmp_option}{"nb"});
@@ -406,6 +405,7 @@ $string.='{ fill => { color => \''.$colors{$lot}.'\' }},';
 							$worksheet->write( $row, $col, $data{$entete}{$lot}{$groupe}{$souris}{$tmp_option}{"delta_ct"});$col++;
 							$worksheet->write( $row, $col, $data{$entete}{$lot}{$groupe}{$souris}{$tmp_option}{"Qté"});$col++;
 							$worksheet->write( $row, $col, $tmp_normalisation);$col++;
+							$worksheet->write( $row, $col, $normalisation);$col++;
 							$row++;	$col=0;
 							$option=$tmp_option;
 							# print $option."\n";
@@ -582,7 +582,7 @@ $string.='{ fill => { color => \''.$colors{$lot}.'\' }},';
 	eval '@list = ( '.$string.');';
 	$chart->add_series(
 	    categories => '='.$tmp_entete.'!$B$2:$B$'.($row),
-	    values     => '='.$tmp_entete.'!$C$2:$C$'.($row),
+	    values     => '='.$tmp_entete.'!$H$2:$H$'.($row),
   		points => @list
 	);		
 	$chart->set_legend( none => 1 );
@@ -595,7 +595,7 @@ $string.='{ fill => { color => \''.$colors{$lot}.'\' }},';
 	$chart->set_x_axis( name => 'Sample' );
 	$chart->add_series(
 	    categories => '='.$tmp_entete.'!$B$2:$B$'.($row),
-	    values     => '='.$tmp_entete.'!$H$2:$H$'.($row),
+	    values     => '='.$tmp_entete.'!$G$2:$G$'.($row),
   		points => @list
 	);		
 	$chart->set_legend( none => 1 );
@@ -621,13 +621,13 @@ $string.='{ fill => { color => \''.$colors{$lot}.'\' }},';
 		$chart->set_y_axis( name => 'Normalized quantification' );
 		$chart->set_x_axis( name => 'Group' );
 		$row=0;$col=0;		
-		$worksheet->write( $row, $col, "Group");$col++;							
-		$worksheet->write( $row, $col, "Average");$col++;							
-		$worksheet->write( $row, $col, "SEM");$col++;				
-		$worksheet->write( $row, $col, "pvalue");$col++;			
-		$worksheet->write( $row, $col, "Average Log2");$col++;		
-		$worksheet->write( $row, $col, "SEM Log2");$col++;											
-		$worksheet->write( $row, $col, "pvalue Log2");$col++;			
+		$worksheet->write( $row, $col, "Group");$col++;	
+		$worksheet->write( $row, $col, "Average");$col++;
+		$worksheet->write( $row, $col, "SEM");$col++;
+		$worksheet->write( $row, $col, "pvalue");$col++;
+		$worksheet->write( $row, $col, "Average Log2");$col++;	
+		$worksheet->write( $row, $col, "SEM Log2");$col++;
+		$worksheet->write( $row, $col, "pvalue Log2");$col++;
 		$row++;$col=0;
 		foreach (sort {$a <=> $b} keys %order_lot){
 			my $lot=$order_lot{$_};
@@ -683,9 +683,9 @@ $string.='{ fill => { color => \''.$colors{$lot}.'\' }},';
 				  $format->set_bg_color( 'green' );	
 				  $format->set_color( 'white' );	
 				}
-				$worksheet->write( $row, $col, $moyenne{$groupe}{$lot}{"pvalue_qte"},$format);$col++;					
+				$worksheet->write( $row, $col, $moyenne{$groupe}{$lot}{"pvalue_qte"},$format);$col++;
 	
-				$worksheet->write( $row, $col, $moylog2);$col++;				
+				$worksheet->write( $row, $col, $moylog2);$col++;
 				$worksheet->write( $row, $col, $er_typelog2);$col++;
 				$worksheet->write( $row, $col, $moyenne{$groupe}{$lot}{"pvalue_log2"});$col++;									
 			}
@@ -717,29 +717,29 @@ $string.='{ fill => { color => \''.$colors{$lot}.'\' }},';
 			 @list
 	    );	
 	    $chart->set_legend( none => 1 );
-		$worksheet->insert_chart( 'H1', $chart, 2, 3, 2, 2 ); 
-		$chart     = $workbook->add_chart( embedded => 1  ,type => 'column' );
-		$chart->show_blanks_as( 'span' );
-		$chart->set_y_axis( name => 'Normalized quantification log2' );
-		$chart->set_x_axis( name => 'Group' );	
-		$chart->add_series(
-		    categories => '='.$tmp_entete.'_Average!$A$2:$A$'.($row),
-		    data_labels => {value => 0},
-		    values     => '='.$tmp_entete.'_Average!$E$2:$E$'.($row),
-			y_error_bars => {
-			    type         => 'custom',
-				plus_values  => '='.$tmp_entete.'_Average!$F$2:$F$'.($row),
-			    minus_values => '='.$tmp_entete.'_Average!$F$2:$F$'.($row),
-			},
-			points => 
-			 @list
-	    );				
-	    $chart->set_legend( none => 1 );
 	    if ($row+1<=20){
 		$worksheet->insert_chart( 'A20', $chart, 2, 3, 2, 2 ); 	    
 	    }
 	    else{
 		$worksheet->insert_chart( 'A'.($row+1), $chart, 2, 3, 2, 2 ); 	    
-	    }
+	    }	    
+	    $chart     = $workbook->add_chart( embedded => 1  ,type => 'column' );
+	    $chart->show_blanks_as( 'span' );
+	    $chart->set_y_axis( name => 'Normalized quantification log2' );
+	    $chart->set_x_axis( name => 'Group' );	
+	    $chart->add_series(
+	      categories => '='.$tmp_entete.'_Average!$A$2:$A$'.($row),
+	      data_labels => {value => 0},
+	      values     => '='.$tmp_entete.'_Average!$E$2:$E$'.($row),
+	      y_error_bars => {
+		  type         => 'custom',
+		      plus_values  => '='.$tmp_entete.'_Average!$F$2:$F$'.($row),
+		  minus_values => '='.$tmp_entete.'_Average!$F$2:$F$'.($row),
+	      },
+	      points => 
+	      @list
+	    );	
+	    $chart->set_legend( none => 1 );
+	    $worksheet->insert_chart( 'H1', $chart, 2, 3, 2, 2 ); 
 	}  
 }
