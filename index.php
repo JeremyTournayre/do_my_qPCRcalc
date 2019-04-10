@@ -1,4 +1,7 @@
 <?php
+  //Getting of the file sent by the user,
+  // launch the perl script to compute and create the Excel file containing the results,
+  // send the Excel file to the user  
    if(isset($_POST['example']) || isset($_POST['template']) || isset($_POST['exampods']) || isset($_POST['exampxlsx'])){
 	if(isset($_POST['example'])){
 	  $file="example.tsv";

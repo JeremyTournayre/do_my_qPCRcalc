@@ -14,7 +14,7 @@ use Statistics::TTest;
 ###############################################################################################
 ###############################################################################################
 
-#Fonction permettant de calculer le log2
+#Function to calculate the log2
 sub log2 {
 	my $n = shift(@_);
 	if ($n == 0){
@@ -24,7 +24,7 @@ sub log2 {
 	return($t);
 }
 
-#Test fichier Excel ou Text
+#Excel or Text file test
 my $text_or_excel="txt";
 open (F,"upload/".$ARGV[0]);
 my $test=<F>;
@@ -32,7 +32,7 @@ if ($test=~m/^PK/){
   $text_or_excel="xls";
 }
 close(F);
-#Si fichier est en format Excel : conversion en .txt
+#If the file is in Excel format: conversion to .txt
 my $in="upload/".$ARGV[0];
 if ($text_or_excel eq "xls"){
   $in="upload/".$ARGV[0];
@@ -60,18 +60,18 @@ my $nb_lot=0;
 my %list_sample;
 my $lot_controle_choose="";
 my $entete_norma_val_choose="";
-#Lecture du fichier
+#Reading the file
 while (<F>){
 	chomp($_);
 	my @tab=split("\t",$_);
-	#Suppression des espaces dans les valeurs
+	#Suppression of spaces in values
 	my @tab2;
 	foreach (@tab){
 		$_=~s/\s//g;
 		push (@tab2,$_);
 	}
 	@tab=@tab2;
-	#Lecture des options : les 2 premières lignes et des en-têtes (3ème ligne)
+	#Reading options: the first 2 lines and headers (3rd line)
 	unshift(@tab,1);
 	if ($_=~m/^Group/i){
 		my $i=0;
@@ -108,7 +108,7 @@ while (<F>){
 			$i++;
 		}
 	}
-	#Récupération du nom des échantillons et des cq
+	#Retrieving the names of samples and cq
 	elsif ($#tab+1==$max && $tab[0] ne ""){		
 		my $groupe=shift(@tab);
 		$groupe =~ s/\s//;
@@ -122,7 +122,7 @@ while (<F>){
 		}
 
 		$lots{$lot}=1;
-		if ($bool_recup_lot==0){
+		if ($bool_recup_lot==0 && $lot_controle_choose eq $lot){
 			$lot_controle=$lot;
 			$bool_recup_lot=1;
 		}		
@@ -130,7 +130,7 @@ while (<F>){
 		$souris =~ s/\s//;
 		$souris=uc($souris);
 		my $tmp_souris=uc($souris);
-		#Si le nom de l'échantillon existe déjà on ajoute "_ number"
+		#If the sample name already exists, add "_ number"
 		my $i=1;
 		while (1){
 		  $i++;
@@ -178,13 +178,25 @@ while (<F>){
 }
 close(F);
 
+
+my $workbook  = Excel::Writer::XLSX->new("download/".$ARGV[0]."-dmqc.xlsx");
+my $worksheet;
+
+if ($bool_recup_lot == 0){
+  my $row=0;
+  my $col=0;
+  $worksheet = $workbook->add_worksheet("Erreur");	
+  $worksheet->write( $row, $col, "No group named: ".$lot_controle_choose);$col++;
+  exit;
+}
+
 foreach (keys %efficiency){
   my $i=$_;
   $efficiency{$entete{$i}}=$efficiency{$i};
 }
 
 
-#Test si les choix de l'utilisateur existe bien
+#Test if the user's choices exist
 if (defined($lots{$lot_controle_choose})){
   $lot_controle=$lot_controle_choose;
 }
@@ -194,10 +206,9 @@ if (defined($entetes{$entete_norma_val_choose})){
   $entete_norma{$entete_norma_val}=1;
 }
 
-my $workbook  = Excel::Writer::XLSX->new("download/".$ARGV[0]."-dmqc.xlsx");
-my $worksheet;
 
-#calcul du delta CT et de la qté
+
+#calculation of the CT delta and the qty
 foreach (sort keys %data){
 	my $entete_sansoption=$_;
 	foreach (sort  keys %{$data{$entete_sansoption}}){
@@ -234,7 +245,7 @@ foreach (sort keys %data){
 
 
 
-# Création des couleurs pour les histogrammes en fonction du nombre de groupes : 
+# Creating colors for histograms based on the number of groups:
 
 my $Assomb=0;
 my $rgb=1;
@@ -252,8 +263,7 @@ for (my $i = 1; $i <= $nb_inter; $i++)
 	my $r=0;
 	my $g=0;
 	my $b=0;
-
-# 	Modifier le 20 pour décider de quand on passe au couleurs assombries. (avec 20 si on a plus de ~100 intéractions cela va donner des nombres négatifs (avec un assombrissement de 50 ($Assomb+50)))
+	#Change the 20 to decide when to darken.
 	if ($rgb==0 && $i%20==0) { $Assomb=$Assomb+50; $rgb=1;}
 	
 	if ($rgb==1) { $r=254-$Assomb; $rgb=2;}
@@ -307,7 +317,7 @@ foreach (sort keys %lots){
   $i_lot++;
 }
 
-#Ecriture des données dans un fichier Excel + calcul
+#Writing data in an Excel file + calculation 
 my %list_entete=%entete;
 foreach (sort {$a <=> $b} keys %list_entete){
 	my $row=0;
@@ -401,9 +411,6 @@ foreach (sort {$a <=> $b} keys %list_entete){
 							   
 								$string.='{ fill => { color => \''.$colors{$lot}.'\' }},';							
 								my $tmp_option=$option;
-								if ($option ne ""){
-									# $option="dupl:_".$option;
-								}
 								$worksheet->write( $row, $col, $lot);$col++;
 								$worksheet->write( $row, $col, $souris);$col++;							
 								$data{$entete}{$lot}{$groupe}{$souris}{$tmp_option}{"Ct"}=~s/,/\./g;
