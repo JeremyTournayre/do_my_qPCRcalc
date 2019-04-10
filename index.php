@@ -287,7 +287,13 @@ form{
 
 .help {
   overflow-x: auto;
-  white-space: nowrap;
+
+}
+.center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 70%;
 }
 </style>
 <body style='margin: 0 auto;'>
@@ -390,9 +396,8 @@ form{
   </div>
   <div hidden id="helpdiv" name= "helpdiv" >
     <div class="help">
-      <img src="img/help.png" >
-      <img src="img/help-2.png">   
-      <img src="img/help-3.png">   
+	  A) The input file has to be in .tsv, .xls, .xlsx. or .odt format. The first two lines are optional. The first defines the control group in B1 cell : the "A" group is choiced. The reference gene in D1 cell : the "RefGeneName" gene is selected. The second allows to define the qPCR efficiency for each gene written on the 3rd line. On the 3rd line there are 2 column headers : "Group" and "Sample" and then there are the genes: "RefGeneName", "TestGene1", "TestGene2". The other rows correspond to the data table : sample according to the Cq. Submitting this file to "do my qPCR calculation" allows you to obtain the result file in Excel format. B) The Excel file contains the normalized Cq for each sample with histograms. C) The Excel file also contains the average results and the student test for each experimental group between the control group.    
+      <img class="center" src="img/help.jpg" > 
     </div>
   </div>     
   <div style="padding-top:40px;margin: auto;width: 50%;text-align: center">
@@ -413,7 +418,7 @@ form{
   <div hidden id="Licensediv" name= "Licensediv" >
     <div class="License">
 Do my qPCR calculations is distributed under <a href="https://www.gnu.org/copyleft/gpl.html">the GNU public license</a>
-The source codes of Do my qPCR calculations will be freely available for non-commercial use on GitHub, and are provided as-is without any warranty regarding reliability, accuracy and fitness for purpose. The user assumes the entire risk of the use of this program and the author can not be hold responsible of any kind of problems. 
+The source codes of Do my qPCR calculations will be freely available for non-commercial use on GitHub at <a href="https://github.com/JeremyTournayre/do_my_qPCRcalc">https://github.com/JeremyTournayre/do_my_qPCRcalc</a>, and are provided as-is without any warranty regarding reliability, accuracy and fitness for purpose. The user assumes the entire risk of the use of this program and the author can not be hold responsible of any kind of problems. 
     </div>  
 <script>
    

@@ -5,7 +5,16 @@ use Spreadsheet::ParseExcel::Utility 'int2col';
 use Spreadsheet::ParseExcel::Utility 'col2int';
 use Statistics::TTest;
 
+###############################################################################################
+## CREDITS ####################################################################################
+# Created by : TOURNAYRE Jérémy				                                                  #
+# Subject : Do my qPCR calculations				                                              #
+# Industry : INRA Clermont-Ferrand / Theix --- Team iMPROVINg                                 #
+# Colleagues : Matthieu Reichstadt, Laurent Parry, Pierre Fafournoux, Céline Jousse           #
+###############################################################################################
+###############################################################################################
 
+#Fonction permettant de calculer le log2
 sub log2 {
 	my $n = shift(@_);
 	if ($n == 0){
@@ -15,9 +24,6 @@ sub log2 {
 	return($t);
 }
 
-
-
-
 #Test fichier Excel ou Text
 my $text_or_excel="txt";
 open (F,"upload/".$ARGV[0]);
@@ -26,7 +32,7 @@ if ($test=~m/^PK/){
   $text_or_excel="xls";
 }
 close(F);
-#Si fichier excel conversion en .txt pour pouvoir utiliser la suite du script
+#Si fichier est en format Excel : conversion en .txt
 my $in="upload/".$ARGV[0];
 if ($text_or_excel eq "xls"){
   $in="upload/".$ARGV[0];
@@ -34,8 +40,6 @@ if ($text_or_excel eq "xls"){
   `ssconvert -O 'separator="	" format=raw quote=""' $in $out`;
   $in=$out;
 }
-
-
 
 open (F,$in);
 my %lots;
@@ -56,13 +60,18 @@ my $nb_lot=0;
 my %list_sample;
 my $lot_controle_choose="";
 my $entete_norma_val_choose="";
+#Lecture du fichier
 while (<F>){
 	chomp($_);
-	#$_=~s/\t( )+\t//g;
-	#$_=~s/\t\t/\t/g;
-	#$_=~s/\t\t/\t/g;
 	my @tab=split("\t",$_);
-	#mise en place du groupe 1 arbitraire
+	#Suppression des espaces dans les valeurs
+	my @tab2;
+	foreach (@tab){
+		$_=~s/\s//g;
+		push (@tab2,$_);
+	}
+	@tab=@tab2;
+	#Lecture des options : les 2 premières lignes et des en-têtes (3ème ligne)
 	unshift(@tab,1);
 	if ($_=~m/^Group/i){
 		my $i=0;
@@ -88,7 +97,7 @@ while (<F>){
 	  $lot_controle_choose=$split[1];
 	  $entete_norma_val_choose=uc($split[3]);
 	}
-	elsif ($_=~m/^efficiency/i){
+	elsif ($_=~m/^qPCR efficiency/i){
 		my $i=0;
 		shift(@tab);shift(@tab);shift(@tab);
 		foreach (@tab){
@@ -99,6 +108,7 @@ while (<F>){
 			$i++;
 		}
 	}
+	#Récupération du nom des échantillons et des cq
 	elsif ($#tab+1==$max && $tab[0] ne ""){		
 		my $groupe=shift(@tab);
 		$groupe =~ s/\s//;
@@ -132,7 +142,6 @@ while (<F>){
 		  }
 		}
 		$souris=$tmp_souris;
-		#print $souris."\n";
 		$list_sample{$souris}=1;
 		for (my $i=0;$i<=($#tab+1);$i++){
 			my $option="";
@@ -146,7 +155,6 @@ while (<F>){
 				$option =~ s/\s+//;
 
 				if ($tab[$i] ne "" && $tab[$i] =~ m/-?\d+\.?,?\d*/){
-					#print '$data{'.$entete_sansoption.'}{'.$lot.'}{'.$groupe.'}{'.$souris.'}{'.$option.'}{'."Ct".'}='.$tab[$i]."\n";
 					$data{$entete_sansoption}{$lot}{$groupe}{$souris}{$option}{"Ct"}=$tab[$i];
 					if ($lot eq $lot_controle){
 						if (!defined($moyenne_A{$entete_sansoption}{$groupe}{$option}{"tot"})){
@@ -160,7 +168,6 @@ while (<F>){
 					}
 				}
 				else{
-					#print '$data{'.$entete_sansoption.'}{'.$lot.'}{'.$groupe.'}{'.$souris.'}{'.$option.'}{'."Ct".'}'.'='."NA";
 					$data{$entete_sansoption}{$lot}{$groupe}{$souris}{$option}{"Ct"}="NA";	
 				}				
 
@@ -227,7 +234,7 @@ foreach (sort keys %data){
 
 
 
-# Création des couleurs dynamiques : 
+# Création des couleurs pour les histogrammes en fonction du nombre de groupes : 
 
 my $Assomb=0;
 my $rgb=1;
@@ -300,6 +307,7 @@ foreach (sort keys %lots){
   $i_lot++;
 }
 
+#Ecriture des données dans un fichier Excel + calcul
 my %list_entete=%entete;
 foreach (sort {$a <=> $b} keys %list_entete){
 	my $row=0;
@@ -382,7 +390,7 @@ foreach (sort {$a <=> $b} keys %list_entete){
 								$worksheet->write( $row, $col, "NA");$col++;
 								$worksheet->write( $row, $col, "NA");$col++;
 								$row++;	$col=0;
-$string.='{ fill => { color => \''.$colors{$lot}.'\' }},';	
+								$string.='{ fill => { color => \''.$colors{$lot}.'\' }},';	
 							}	
 							else{						
 								if (!defined($entete_norma{$entete})){											
@@ -391,46 +399,24 @@ $string.='{ fill => { color => \''.$colors{$lot}.'\' }},';
 								$tmp_normalisation=$normalisation;						
 								$normalisation=log2($normalisation);
 							   
-$string.='{ fill => { color => \''.$colors{$lot}.'\' }},';							
-							my $tmp_option=$option;
-							if ($option ne ""){
-								# $option="dupl:_".$option;
-							}
-							$worksheet->write( $row, $col, $lot);$col++;
-							$worksheet->write( $row, $col, $souris);$col++;							
-							$data{$entete}{$lot}{$groupe}{$souris}{$tmp_option}{"Ct"}=~s/,/\./g;
-							$worksheet->write_number( $row, $col, $data{$entete}{$lot}{$groupe}{$souris}{$tmp_option}{"Ct"});$col++;
-							my $moyenne_A_delta_ct=($moyenne_A{$entete}{$groupe}{$tmp_option}{"tot"}/$moyenne_A{$entete}{$groupe}{$tmp_option}{"nb"});
-							$worksheet->write( $row, $col, $moyenne_A_delta_ct);$col++;							
-							$worksheet->write( $row, $col, $data{$entete}{$lot}{$groupe}{$souris}{$tmp_option}{"delta_ct"});$col++;
-							$worksheet->write( $row, $col, $data{$entete}{$lot}{$groupe}{$souris}{$tmp_option}{"Qté"});$col++;
-							$worksheet->write( $row, $col, $tmp_normalisation);$col++;
-							$worksheet->write( $row, $col, $normalisation);$col++;
-							$row++;	$col=0;
-							$option=$tmp_option;
-							# print $option."\n";
-							# print $entete."-entete\n";
-							# if (defined($entete_norma{$entete}) || (($the_entete_norma eq "NONO 18_06" && $groupe eq "1") || ($groupe eq "1_2" || $groupe eq "2" || $groupe eq "3")) && ((($groupe ne "1" && $option eq "") || ($bool_15_18 == 0 && $groupe eq "1" && $option eq "") ||  ($bool_15_18 == 1 && $groupe eq "1" && $option=~/18/ && $option !~/DUPL/i)) || $entete eq "DDIT4" || ($entete eq "LEP" && $option !~/DUPL/i))){
-								# print "ok".$option."\n";
-								# my $normalisation;
-								# if (defined($entete_norma{$entete})){
-								# 	$normalisation=$data{$entete}{$lot}{$groupe}{$souris}{$option}{"Qté"};
-								# }								
-								# if (!defined($entete_norma{$entete})){	
-								# 	$normalisation=$data{$entete}{$lot}{$groupe}{$souris}{$option}{"Qté"}/$data{$the_entete_norma}{$lot}{$groupe}{$souris}{""}{"Qté"};
-								# }	
-# 								$normalisation=log2($normalisation);
-# 								if ($normalisation<0){
-# 									$string2.='{  gradient => { colors => [ "'.$colors{$lot}.'", "'.$colors{$groupe}.'" ],positions => [ 20,       10 ] }},';
-# 								}
-# 								else{
-# 									$string2.='{  gradient => { colors => [ "'.$colors{$lot}.'", "'.$colors{$groupe}.'" ],positions => [ 70,       100 ] }},';
-# 								}	
+								$string.='{ fill => { color => \''.$colors{$lot}.'\' }},';							
+								my $tmp_option=$option;
+								if ($option ne ""){
+									# $option="dupl:_".$option;
+								}
+								$worksheet->write( $row, $col, $lot);$col++;
+								$worksheet->write( $row, $col, $souris);$col++;							
+								$data{$entete}{$lot}{$groupe}{$souris}{$tmp_option}{"Ct"}=~s/,/\./g;
+								$worksheet->write_number( $row, $col, $data{$entete}{$lot}{$groupe}{$souris}{$tmp_option}{"Ct"});$col++;
+								my $moyenne_A_delta_ct=($moyenne_A{$entete}{$groupe}{$tmp_option}{"tot"}/$moyenne_A{$entete}{$groupe}{$tmp_option}{"nb"});
+								$worksheet->write( $row, $col, $moyenne_A_delta_ct);$col++;							
+								$worksheet->write( $row, $col, $data{$entete}{$lot}{$groupe}{$souris}{$tmp_option}{"delta_ct"});$col++;
+								$worksheet->write( $row, $col, $data{$entete}{$lot}{$groupe}{$souris}{$tmp_option}{"Qté"});$col++;
+								$worksheet->write( $row, $col, $tmp_normalisation);$col++;
+								$worksheet->write( $row, $col, $normalisation);$col++;
+								$row++;	$col=0;
+								$option=$tmp_option;
 								$string2.='{ fill => { color => \''.$colors{$lot}.'\' }},';							
-# 	                     
-# 	       ';
-								# $worksheet2->write( $row2, $col2, $souris."".$option." Gr_".$groupe." ".$the_entete_norma);$col2++;							
-								# $worksheet2->write( $row2, $col2, $normalisation);$col2++;
 								$row2++;	$col2=0;								
 								if (!defined($moyenne{"all"}{$lot}{"nb"})){
 									$moyenne{"all"}{$lot}{"nb"}=0;
@@ -478,9 +464,6 @@ $string.='{ fill => { color => \''.$colors{$lot}.'\' }},';
 				}	
 			}	
 			my $valcarre=0;
-			
-			# print $groupe."-".$lot."\n";
-			# print $moyenne{$groupe}{$lot}{"tot"}."\n";exit;
 			my $moy;
 			if (!defined($moyenne{$groupe}) || !defined($moyenne{$groupe}{$lot}) || !defined($moyenne{$groupe}{$lot}{"nb"})){
 				$moy=0;
@@ -507,7 +490,6 @@ $string.='{ fill => { color => \''.$colors{$lot}.'\' }},';
 				$valcarrelog2+=($_-$moylog2)*($_-$moylog2);
 			}		
 
-			# print $valcarrelog2."\n";
 			$moyenne{$groupe}{$lot}{"valcarrelog2"}=$valcarrelog2;		
 		}	
 		my $valcarre=0;
@@ -522,7 +504,6 @@ $string.='{ fill => { color => \''.$colors{$lot}.'\' }},';
 			$valcarre+=($_-$moy)*($_-$moy);
 		}		
 		$moyenne{"all"}{$lot}{"valcarre"}=$valcarre;	
-		# $list_val_lot{"all"}{$lot}{"qte"}=@totcarre;	
 		push(@{$list_val_lot{"all"}{$lot}{"qte"}}, @totcarre);
 
 		my $moylog2;	
@@ -537,14 +518,9 @@ $string.='{ fill => { color => \''.$colors{$lot}.'\' }},';
 			$valcarrelog2+=($_-$moylog2)*($_-$moylog2);
 		}		
 		push(@{$list_val_lot{"all"}{$lot}{"log2"}}, @totcarrelog2);
-
-# print "valcarrelog2:".$valcarrelog2."\n";
 		$moyenne{"all"}{$lot}{"valcarrelog2"}=$valcarrelog2;			
 	}
-
-			
 	my $ttest = new Statistics::TTest;  
-
 	my @array1=@{$list_val_lot{"all"}{$lot_controle}{"qte"}};
 	if ($#array1>0){
 		foreach (keys %{$list_val_lot{"all"}}){
@@ -553,8 +529,6 @@ $string.='{ fill => { color => \''.$colors{$lot}.'\' }},';
 			}
 
 			my @array2=@{$list_val_lot{"all"}{$_}{"qte"}};
-		
-
 			$ttest->load_data(\@array1,\@array2);  
 			my $pvalue=$ttest->t_prob;
 			$moyenne{"all"}{$_}{"pvalue_qte"}=$pvalue;
@@ -654,12 +628,9 @@ $string.='{ fill => { color => \''.$colors{$lot}.'\' }},';
 				$nblog2=$moyenne{$groupe}{$lot}{"nblog2"};
 				$moylog2=($totlog2/$nblog2);
 			}
-
-
 			my $valcarre=$moyenne{$groupe}{$lot}{"valcarre"};
 			my $ecart_type =0;
 			my $er_type;
-
 			my $valcarrelog2=$moyenne{$groupe}{$lot}{"valcarrelog2"};
 			my $ecart_typelog2 =0;
 			my $er_typelog2;
