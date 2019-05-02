@@ -260,7 +260,7 @@
 function loadtemplate() {
     $('#my').html("");
     $('#my').jexcel({
-	csv:'http://147.99.156.182/do_my_qPCRcalc/template.tsv',
+	csv:'./template.tsv',
 	  csvHeaders:false,
 	  separator:'\t',
 	  delimiter:'\t',
@@ -286,7 +286,7 @@ loadtemplate();
 function loadexample() {
    $('#my').html("");
     $('#my').jexcel({
-      csv:'http://147.99.156.182/do_my_qPCRcalc/example.tsv',
+      csv:'./example.tsv',
 	csvHeaders:false,
 	separator:'\t',
 	delimiter:'\t',
