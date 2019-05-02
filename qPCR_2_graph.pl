@@ -61,13 +61,21 @@ my %list_sample;
 my $lot_controle_choose="";
 my $entete_norma_val_choose="";
 #Reading the file
+
 while (<F>){
 	chomp($_);
+	if ($_=~m/^\s+$/ || $_=~m/^\s*\t/){
+	  next;
+	}
+	
 	my @tab=split("\t",$_);
 	#Suppression of spaces in values
 	my @tab2;
 	foreach (@tab){
-		$_=~s/\s//g;
+		if ($_ =~m/^(\s*|\t*)$/){
+		    $_="<<NA>>";
+		}
+		$_=~s/\s/_/g;
 		push (@tab2,$_);
 	}
 	@tab=@tab2;
@@ -77,16 +85,21 @@ while (<F>){
 		my $i=0;
 		%entete=();
 		shift(@tab);shift(@tab);shift(@tab);
+	
 		foreach (@tab){	
-			
-			$entete{$i}=$_;
-			$entete{$i}=uc($entete{$i});
-			$entetes{$entete{$i}}=1;
-			if ($bool_recup_entetenorma==0){
-				$entete_norma_val=$entete{$i};
-				$entete_norma{$entete{$i}}=1;
-				$bool_recup_entetenorma=1;
-			}			
+		      if ($_ eq "<<NA>>"){
+		      
+		       }
+			else{
+			  $entete{$i}=$_;
+			  $entete{$i}=uc($entete{$i});
+			  $entetes{$entete{$i}}=1;
+			  if ($bool_recup_entetenorma==0){
+				  $entete_norma_val=$entete{$i};
+				  $entete_norma{$entete{$i}}=1;
+				  $bool_recup_entetenorma=1;
+			  }	
+			}
 			$i++;
 		}
 		$max=$i+3;
@@ -111,10 +124,10 @@ while (<F>){
 	#Retrieving the names of samples and cq
 	elsif ($#tab+1==$max && $tab[0] ne ""){		
 		my $groupe=shift(@tab);
-		$groupe =~ s/\s//;
+		$groupe =~ s/\s/_/g;
 		$groupe=uc($groupe);
 		my $lot=shift(@tab);
-		$lot =~ s/\s//;
+		$lot =~ s/\s/_/g;
 		$lot=uc($lot);
 		if (!defined($lots{$lot})){
 			$order_lot{$nb_lot}=$lot;
@@ -122,12 +135,12 @@ while (<F>){
 		}
 
 		$lots{$lot}=1;
-		if ($bool_recup_lot==0 && $lot_controle_choose eq $lot){
+		if ($bool_recup_lot==0 && ($lot_controle_choose eq "" || $lot_controle_choose eq $lot)){
 			$lot_controle=$lot;
 			$bool_recup_lot=1;
 		}		
 		my $souris=shift(@tab);
-		$souris =~ s/\s//;
+		$souris =~ s/\s/_/g;
 		$souris=uc($souris);
 		my $tmp_souris=uc($souris);
 		#If the sample name already exists, add "_ number"
@@ -146,13 +159,13 @@ while (<F>){
 		for (my $i=0;$i<=($#tab+1);$i++){
 			my $option="";
 			my $entete_sansoption="";
-			if (defined($entete{$i})){
+			if (defined($entete{$i}) && $entete{$i} ne "<<NA>>"){
 				if ($option eq ""){
 					$entete_sansoption=$entete{$i};
 				}
 				$entete_sansoption =~ s/^\s+//;$entete_sansoption =~ s/\s+$//;
 				$entete_sansoption =~    s/[\W]+//g;
-				$option =~ s/\s+//;
+				$option =~ s/\s+/_/g;
 
 				if ($tab[$i] ne "" && $tab[$i] =~ m/-?\d+\.?,?\d*/){
 					$data{$entete_sansoption}{$lot}{$groupe}{$souris}{$option}{"Ct"}=$tab[$i];
@@ -189,6 +202,7 @@ if ($bool_recup_lot == 0){
   $worksheet->write( $row, $col, "No group named: ".$lot_controle_choose);$col++;
   exit;
 }
+
 
 foreach (keys %efficiency){
   my $i=$_;
@@ -320,6 +334,10 @@ foreach (sort keys %lots){
 #Writing data in an Excel file + calculation 
 my %list_entete=%entete;
 foreach (sort {$a <=> $b} keys %list_entete){
+      if ($list_entete{$_} eq "<<NA>>"){
+
+	next;
+      }
 	my $row=0;
 	my $col=0;	
 	my $row2=0;
@@ -327,11 +345,11 @@ foreach (sort {$a <=> $b} keys %list_entete){
 	my $entete=$list_entete{$_};
 
 	my $tmp_entete=$entete;
-	$tmp_entete =~ s/\s+//g;	
+	$tmp_entete =~ s/\s+/_/g;	
 	$worksheet = $workbook->add_worksheet($tmp_entete);	
 	$worksheet->write( $row, $col, "group");$col++;	
 	$worksheet->write( $row, $col, "name");$col++;							
-	$worksheet->write( $row, $col, "Quantification Cycle (Cq)");$col++;
+	$worksheet->write( $row, $col, $tmp_entete." Quantification Cycle (Cq)");$col++;
 	$worksheet->write( $row, $col, "Average ".$lot_controle." Cq");$col++;							
 	$worksheet->write( $row, $col, "delta Cq");$col++;
 	my $eff="";
@@ -529,20 +547,26 @@ foreach (sort {$a <=> $b} keys %list_entete){
 	}
 	my $ttest = new Statistics::TTest;  
 	my @array1=@{$list_val_lot{"all"}{$lot_controle}{"qte"}};
-	if ($#array1>0){
+
 		foreach (keys %{$list_val_lot{"all"}}){
 			if ($_ eq $lot_controle){
 				next;
 			}
 
 			my @array2=@{$list_val_lot{"all"}{$_}{"qte"}};
-			$ttest->load_data(\@array1,\@array2);  
-			my $pvalue=$ttest->t_prob;
-			$moyenne{"all"}{$_}{"pvalue_qte"}=$pvalue;
+			if ($#array2<=0 || $#array1<=0){
+			  $moyenne{"all"}{$_}{"pvalue_qte"}="NA";
+			}
+			else{
+
+			  $ttest->load_data(\@array1,\@array2);  
+			  my $pvalue=$ttest->t_prob;
+			  $moyenne{"all"}{$_}{"pvalue_qte"}=$pvalue;
+			}
 		}
-	}
-	@array1=@{$list_val_lot{"all"}{$lot_controle}{"log2"}};
-	if ($#array1>0){
+
+		@array1=@{$list_val_lot{"all"}{$lot_controle}{"log2"}};
+
 		foreach (keys %{$list_val_lot{"all"}}){
 			if ($_ eq $lot_controle){
 				next;
@@ -550,12 +574,16 @@ foreach (sort {$a <=> $b} keys %list_entete){
 
 			my @array2=@{$list_val_lot{"all"}{$_}{"log2"}};
 		
-
-			$ttest->load_data(\@array1,\@array2);  
-			my $pvalue=$ttest->t_prob;
-			$moyenne{"all"}{$_}{"pvalue_log2"}=$pvalue;
+			if ($#array2<=0 || $#array1<=0){
+			  $moyenne{"all"}{$_}{"pvalue_log2"}="NA";
+			}
+			else{
+			  $ttest->load_data(\@array1,\@array2);  
+			  my $pvalue=$ttest->t_prob;
+			  $moyenne{"all"}{$_}{"pvalue_log2"}=$pvalue;
+			 }
 		}
-	}
+	
 	chop($string);
 	$string.=' ] ';
 	my @list;
@@ -603,7 +631,7 @@ foreach (sort {$a <=> $b} keys %list_entete){
 		$chart->set_x_axis( name => 'Group' );
 		$row=0;$col=0;		
 		$worksheet->write( $row, $col, "Group");$col++;	
-		$worksheet->write( $row, $col, "Average");$col++;
+		$worksheet->write( $row, $col, $tmp_entete." Average");$col++;
 		$worksheet->write( $row, $col, "SEM");$col++;
 		$worksheet->write( $row, $col, "pvalue");$col++;
 		$worksheet->write( $row, $col, "Average Log2");$col++;	
@@ -657,7 +685,7 @@ foreach (sort {$a <=> $b} keys %list_entete){
 				$worksheet->write( $row, $col, $moy);$col++;
 				$worksheet->write( $row, $col, $er_type);$col++;	
 				my $format = $workbook->add_format();
-				if (defined($moyenne{$groupe}{$lot}{"pvalue_qte"}) && $moyenne{$groupe}{$lot}{"pvalue_qte"} ne "" && $moyenne{$groupe}{$lot}{"pvalue_qte"}<=0.05){
+				if (defined($moyenne{$groupe}{$lot}{"pvalue_qte"}) && $moyenne{$groupe}{$lot}{"pvalue_qte"} ne "" && $moyenne{$groupe}{$lot}{"pvalue_qte"} ne "NA" && $moyenne{$groupe}{$lot}{"pvalue_qte"}<=0.05){
 				  $format->set_bg_color( 'green' );	
 				  $format->set_color( 'white' );	
 				}

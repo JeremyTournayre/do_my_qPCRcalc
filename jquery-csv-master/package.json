@@ -1,0 +1,34 @@
+{
+  "name": "jquery-csv",
+  "version": "0.8.12",
+  "description": "A jQuery CSV parser plugin. Battle Tested | Optimized | 100% IETF RFC 4180 Complete",
+  "author": {
+    "name": "Evan Plaice",
+    "email": "evan.plaice@gmail.com"
+  },
+  "devDependencies": {
+    "jquery": "^3.0",
+    "tap-spec": "^5.0.0",
+    "tape": "^4.8.0"
+  },
+  "main": "src/jquery.csv.js",
+  "scripts": {
+    "start": "npx live-server",
+    "test": "npx tape ./test/*.js | tap-spec",
+    "lint": "npm run lint:htmlhint && npm run lint:semistandard",
+    "lint:htmlhint": "npx htmlhint --config .htmlhint examples/**/*.html",
+    "lint:semistandard": "npx semistandard",
+    "minify": "npx uglify-js src/jquery.csv.js -o src/jquery.csv.min.js --compress --mangle",
+    "preversion": "npm run test",
+    "postversion": "git push --follow-tags",
+    "prepublish": "npm run lint && npm run test"
+  },
+  "license": "MIT",
+  "repository": "http://github.com/evanplaice/jquery-csv/",
+  "semistandard": {
+    "globals": [
+      "$",
+      "jQuery"
+    ]
+  }
+}

@@ -2,6 +2,34 @@
   //Getting of the file sent by the user,
   // launch the perl script to compute and create the Excel file containing the results,
   // send the Excel file to the user  
+  
+  
+  
+  function generateRandomString($length = 10) {
+      $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      $charactersLength = strlen($characters);
+      $randomString = '';
+      for ($i = 0; $i < $length; $i++) {
+	  $randomString .= $characters[rand(0, $charactersLength - 1)];
+      }
+      return $randomString;
+  }
+
+  
+  $bool_ok=0;
+  $filename="";
+   if($_POST['action'] == 'in' && isset($_POST['txt']) && $_POST['txt'] != ""){
+      $filename="dmcq.xlsx";
+      $randomstring=generateRandomString();
+      $file_upload='upload/'.$randomstring;
+      $fichier=fopen($file_upload,'w+');
+      $texte=$_POST['txt'];
+      fwrite($fichier,$texte);
+      fclose($fichier);
+       $file_name = $randomstring;
+      $bool_ok=1;
+	  
+   }
    if(isset($_POST['example']) || isset($_POST['template']) || isset($_POST['exampods']) || isset($_POST['exampxlsx'])){
 	if(isset($_POST['example'])){
 	  $file="example.tsv";
@@ -16,11 +44,11 @@
 	  $file="example.xlsx";
 	}	
 	else{
-	exit;
+	  exit;
 	}
 	$length   = sprintf("%u", filesize($file));
 	$basename_file=basename($file);
-	    header('Content-Description: File Transfer');
+	header('Content-Description: File Transfer');
 	header('Content-Type: application/octet-stream');
 	header('Content-Disposition: attachment; filename="' . $basename_file . '"');
 	header('Content-Transfer-Encoding: binary');
@@ -32,23 +60,24 @@
 	set_time_limit(0);
 	readfile($file);
    }
-   else if(isset($_FILES['qPCRfile']) && isset( $_FILES['qPCRfile']['name']) &&  $_FILES['qPCRfile']['name']!=""){
-
-	  $errors= array();
-	  
+   else if($_POST['action'] == 'file' && isset($_FILES['qPCRfile']) && isset( $_FILES['qPCRfile']['name']) &&  $_FILES['qPCRfile']['name']!=""){
 	  $file_name = $_FILES['qPCRfile']['name'];
+	
+	  $errors= array();
+	
 	  $explod=explode('.',$file_name);
 	  $new_file_name="";
 	  for ($i = 0; $i < (count($explod)-1); $i++) {
 	      $new_file_name=$new_file_name.$explod[$i].'.';
 	  }
 	  substr($new_file_name, 0, -1);
+	
 	  if ($new_file_name == ""){
 	    $new_file_name=$file_name;
 	  }
 	  $file_name=$new_file_name;
 	  $file_name=preg_replace('/[^A-Za-z0-9\-]/', '', $file_name); // Removes special chars.
-	  // print $file_name;
+
 	  $file_size =$_FILES['qPCRfile']['size'];
 	  $file_tmp =$_FILES['qPCRfile']['tmp_name'];
 	  $file_type=$_FILES['qPCRfile']['type'];
@@ -56,250 +85,71 @@
 	  $i=2;
 	  $file_name_ori=$file_name;
 	  $max_size=5000000;
+	  $bool_ok=0;
 	  if ($file_size>$max_size){
-	  	print "file_size : ".$file_size." octets must be < max_size : ".$max_size." octets</br>";
+		print "file_size : ".$file_size." octets must be < max_size : ".$max_size." octets</br>";
+		
 	  }
-	  else{
-		  while(file_exists($file_upload)){
-		  	$file_name=$file_name_ori."_".$i;
-		  	$file_upload="upload/".$file_name;
-		  	$i++;
+	  while(file_exists($file_upload)){
+	    $file_name=$file_name_ori."_".$i;
+	    $file_upload="upload/".$file_name;
+	    $i++;
+	  }
+      
+	  if (!file_exists($file_upload)) {
+	    move_uploaded_file($file_tmp,$file_upload);
+	    $bool_ok=1;
+	  }		  
+	   
+      }
+      if ($bool_ok==1){
+      //print $file_name;exit;
+	    exec("perl qPCR_2_graph.pl $file_name");
+	    $file="download/".$file_name."-dmqc.xlsx";
+	    if (file_exists($file_upload)){
+	      unlink($file_upload);
+	    }
+	    if (file_exists($file_upload.'.txt')){
+	      unlink($file_upload.'.txt');
+	    }
+	    if (file_exists($file)) {
+		  $length   = sprintf("%u", filesize($file));
+		  if ($filename==""){
+		    $filename=basename($file);
 		  }
-		  if (!file_exists($file_upload)) {
-		      move_uploaded_file($file_tmp,$file_upload);
-		      exec("perl qPCR_2_graph.pl $file_name");
-		      $file="download/".$file_name."-dmqc.xlsx";
-		      unlink($file_upload);
-		      unlink($file_upload.'.txt');
-			if (file_exists($file)) {
-			    $length   = sprintf("%u", filesize($file));
-			    $basename_file=basename($file);
-			 	header('Content-Description: File Transfer');
-			    header('Content-Type: application/octet-stream');
-			    header('Content-Disposition: attachment; filename="' . $basename_file . '"');
-			    header('Content-Transfer-Encoding: binary');
-			    header('Connection: Keep-Alive');
-			    header('Expires: 0');
-			    header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
-			    header('Pragma: public');
-			    header('Content-Length: ' . $length);
-			    set_time_limit(0);
-			    readfile($file);
-			    unlink($file);
+		  header('Content-Description: File Transfer');
+		  header('Content-Type: application/octet-stream');
+		  header('Content-Disposition: attachment; filename="' . $filename . '"');
+		  header('Content-Transfer-Encoding: binary');
+		  header('Connection: Keep-Alive');
+		  header('Expires: 0');
+		  header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+		  header('Pragma: public');
+		  header('Content-Length: ' . $length);
+		  set_time_limit(0);
+		  readfile($file);
+		  unlink($file);
 
-				}
-				else{
-					echo "Failed";
-				}
-			}
-		}
-	}
- 	else{
+	    }
+	    else{
+		    echo "Failed";
+	    }
 
+      }
+      else{
+	$_POST = array();
 
 ?>
 <html>
-<style>
-.line-separator{
-    background:black;
+<head>
 
-    padding-left:5;
-    padding-right:5;
-    margin-right:5px;
-    margin-left:5px;
-}
-
-
-.button{
-
-font: 400 15px Arial;    
-  background:#1AAB8A;
-  color:#fff;
-  border:none;
-  position:relative;
-  cursor:pointer;
-  transition:800ms ease all;
-  outline:none;
-}
-
-.buttonred{
-
-font: 400 15px Arial;    
-  background:#ff5050;
-  color:#fff;
-  border:none;
-  position:relative;
-  cursor:pointer;
-  transition:800ms ease all;
-  outline:none;
-}
-
-.myLabel {
-  text-align:center;
-  padding:10px;
-}
-.desc {
-  padding-top:40px;
-  margin: auto;
-  width: 50%;
-  text-align: center;
-}
-
-.temp
-{
-
-}
-
-
-.maDiv {
- padding-top:10;
-  margin:0 auto;width:800px;
-    text-align:center;
-}
-@media screen and (max-width: 800px) {
-  .button {
-    width:100%;
-    margin-bottom:15px;
-    display: block;
-    text-align: left;
-    font-size:50px;
-  }
-    .buttonred {
-    width:100%;
-    margin-bottom:15px;
-    display: block;
-    text-align: left;
-    font-size:50px;
-  }
-
-.exception{
-
-}
-  
-.line-separator{
-    background:black;
-    margin:0;
-    padding-top:15px;
-    padding-bottom:5px;
-    padding-left:400;
-    padding-right:400;
- 
-}
-
-  .titrebutton { 
-      font-size:50px;
-  }
-  
-.myLabel {
-  text-align:left;
-}
-
-  .maDiv {
-    max-width: 1000;
-  }
-  .desc {
-    margin-top:130px;
-    width:100%;
-  }
-
-  .temp {
-    width:100%;
-  }
-
-
-}
-*{margin:0; padding:0}
-label{
-    padding: 20px ;
-    display: inline-block;
-    font: 400 15px Arial;    
- }
-
-
-.button:hover{
-  background:#fff;
-  color:#1AAB8A;
-}
-.button:before,.button:after{
-  content:'';
-  position:absolute;
-  top:0;
-  right:0;
-  height:2px;
-  width:0;
-  background: #1AAB8A;
-  transition:400ms ease all;
-}
-.button:after{
-  right:inherit;
-  top:inherit;
-  left:0;
-  bottom:0;
-}
-.button:hover:before,.button:hover:after{
-  width:100%;
-  transition:800ms ease all;
-}
-
-.buttonred:hover{
-  background:#fff;
-  color:#ff5050;
-}
-.buttonred:before,.buttonred:after{
-  content:'';
-  position:absolute;
-  top:0;
-  right:0;
-  height:2px;
-  width:0;
-  background: #ff5050;
-  transition:400ms ease all;
-}
-.buttonred:after{
-  right:inherit;
-  top:inherit;
-  left:0;
-  bottom:0;
-}
-.buttonred:hover:before,.buttonred:hover:after{
-  width:100%;
-  transition:800ms ease all;
-}
-
-
-form{
-  margin-bottom: 0em;
-}
-
-.container{
-  margin:0 auto;
-  max-width: 600px;min-width:600px;
-  position: relative;
-  height: 100px;    
-}
-
-
-[id^=myBar] {
-  width: 150px;
-  height: 50px;
-  position:absolute;
-  bottom : 0;
-  text-align: center;
-  color: white;
-}
-
-.help {
-  overflow-x: auto;
-
-}
-.center {
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
-  width: 70%;
-}
-</style>
-<body style='margin: 0 auto;'>
+<link href="./style.css" rel="stylesheet"/>
+<script src="./jquery.min.js"></script>
+ <script src="./jquery-csv-master/src/jquery.csv.js"></script>
+  <script src="./jexcel-master/dist/js/jquery.jexcel.js"></script>
+<link rel="stylesheet" href="./jexcel-master/dist/css/jquery.jexcel.css" type="text/css" />
+</head>
+<body>
   <div id='big_container'  style='transition:800ms ease all;border-bottom: 5px solid black;width:100%;min-width:400px;'>
   <div class="container" >
       <div style='  background-color:  #F78181' id="myBar0"><div id='a' style='transition:800ms ease all;background-color:red;font-size: 40px;;color:black'>Do</div></div>
@@ -366,17 +216,120 @@ form{
 
 
   </script>
-
+  </br>
+    "Do my qPCR calculation" can automatically process qPCR raw data (Cq) to get the data normalization and graphical representation of the different samples in an Excel file (readable via Microsoft Office, LibreOffice...). This tool is also available on Github for installation and local use with or without web interface at https://github.com/JeremyTournayre/do_my_qPCRcalc.
   <div class="maDiv">
-    
+
     <form class="temp" action="" method="POST" enctype="multipart/form-data">
     <button style='padding:10px;' class="button" type="submit" id="template" name= "template">Template</button><span class="line-separator "></span ><button style='padding:10px;' class="button" type="submit" id="example" name= "example">Example.tsv</button>
     <button style='padding:10px;' class="button" type="submit" id="exampxlsx" name= "exampxlsx">Example.xlsx</button>
-    <button style='padding:10px;' class="button" type="submit" id="exampods" name= "exampods">Example.ods</button><br><br><label class="myLabel buttonred" for="file-upload" style='font-size:20px;' >Input file (.tsv, .xlsx, .ods)</label><input id="file-upload" type="file" name="qPCRfile" style="display:none;"><span  class="line-separator "></span ><button class="buttonred" type="submit" style='padding:10px;font-size:20px'>Submit</button>
+    <button style='padding:10px;' class="button" type="submit" id="exampods" name= "exampods">Example.ods</button><br><br>
+  </form>
+  <form class="temp" action="" method="POST" enctype="multipart/form-data">
+<div class="form-group file-upload">
+    
+    <div class="cols-sm-9">
+      <div class="input-group">
+        
+        <div class="form-control" data-message="Click to select file or drag and drop it here">
+          <input  title="Click to select file or drag and drop it here" type="file" name="qPCRfile" id="document_file">
+        </div>
+        <button class="buttonred" type="submit" name="action" style='padding:10px;' value="file">Submit </br>file</button>
+      </div>
+    </div>
+  </div>
+  </div>
+  <div style="width:80%;margin:auto;padding-top:20px; border-bottom: 5px solid #000;"></div>
+  <div class="maDivjexcel" >
+  <form class="temp" action="" method="POST" enctype="multipart/form-data">
+    OR copy paste your data below and <button class="buttonblue" type="submit" id="submit" name="action" value="in" style='padding:10px;'>Submit table</button>
+    
+<button class='button' style="padding:10px" onclick="$('#my').jexcel('insertColumn'); event.preventDefault(); return false;">+ column</button >
+<button class='button' style="padding:10px" onclick="$('#my').jexcel('insertRow'); event.preventDefault(); return false;">+ row</button >
+  
+<button class='button' style="padding:10px" onclick="loadtemplate();event.preventDefault(); return false;">Load template</button >
+<button class='button' style="padding:10px" onclick="loadexample();event.preventDefault(); return false;">Load example</button >    
+  </br>
+    <div id="my"  class="jexcel" ></div>
+    <textarea id='txt' name="txt" style='width:400px;height:120px;display:none;'></textarea>
+  </form>
+<script>
+
+
+
+function loadtemplate() {
+    $('#my').html("");
+    $('#my').jexcel({
+	csv:'http://147.99.156.182/do_my_qPCRcalc/template.tsv',
+	  csvHeaders:false,
+	  separator:'\t',
+	  delimiter:'\t',
+	  colWidths: [150,200,200,200,100,100,100,100,100,100],
+	  minDimensions:[10,5],
+	  csvFileName:"dmcq.tsv",
+	  style:[
+	      { A1: 'font-weight: bold;background-color: orange; ' },
+	      { B1: 'background-color: FFFDA5; ' },
+	      { C1: 'font-weight: bold;background-color: orange; ' },
+	      { D1: 'background-color: FFFDA5; ' },
+	      { C2: 'background-color: FFFDA5; ' },
+	      { D2: 'background-color: FFFDA5; ' },
+	      { E2: 'background-color: FFFDA5; ' },
+	      { A2: 'font-weight: bold;background-color: orange; ' },
+	      { A3: 'font-weight: bold; background-color: orange; ' },
+	      { B3: 'font-weight: bold; background-color: orange; ' }
+
+	  ],
+      });
+}
+loadtemplate();
+function loadexample() {
+   $('#my').html("");
+    $('#my').jexcel({
+      csv:'http://147.99.156.182/do_my_qPCRcalc/example.tsv',
+	csvHeaders:false,
+	separator:'\t',
+	delimiter:'\t',
+	colWidths: [150,100,150,150,100,100,100,100,100,100],
+	minDimensions:[10,5],
+	csvFileName:"dmcq.tsv",
+	style:[
+	    { A1: 'font-weight: bold;background-color: orange; ' },
+	    { B1: 'background-color: FFFDA5; ' },
+	    { C1: 'font-weight: bold;background-color: orange; ' },
+	    { D1: 'background-color: FFFDA5; ' },
+	    { E2: 'background-color: FFFDA5; ' },
+	    { A2: 'font-weight: bold;background-color: orange; ' },
+	    { A3: 'font-weight: bold; background-color: orange; ' },
+	    { B3: 'font-weight: bold; background-color: orange; ' }
+
+	],
+    });
+}
+
+
+$('#submit').on('click', function () {
+
+  var data = $('#my').jexcel('getData');
+
+  $('#txt').val($.csv.fromArrays(data,{separator:"\t",delimiter:"\t"}));
+});
+</script>
+   
+<p><button id='download'>Export this spreadsheet as TSV</button></p>
+
+</div>
+<script>
+$('#download').on('click', function () {
+    $('#my').jexcel('download');
+});
+</script>
+    
+
     </form>
   </div>
    
-  <script src="jquery.min.js"></script>
+
   <script>
   $('#file-upload').change(function() {
     var i = $(this).prev('label').clone();
@@ -394,18 +347,25 @@ form{
   });
   </script>
 
-  <div class="desc" >
-    <button style='padding:10px' class='button' type="submit" id="help" name= "help">Description/Help</button></br>
+  <div class="desc"  >
+    <button style='padding:10px;' class='button' type="submit" id="help" name= "help">Description/Help</button></br>
   </div>
+   
+ 
   <div hidden id="helpdiv" name= "helpdiv" >
     <div class="help">
 	  A) The input file has to be in .tsv, .xls, .xlsx. or .odt format. The first two lines are optional. The first defines the control group in B1 cell : the "A" group is choiced. The reference gene in D1 cell : the "RefGeneName" gene is selected. The second allows to define the qPCR efficiency for each gene written on the 3rd line. On the 3rd line there are 2 column headers : "Group" and "Sample" and then there are the genes: "RefGeneName", "TestGene1", "TestGene2". The other rows correspond to the data table : sample according to the Cq. Submitting this file to "do my qPCR calculation" allows you to obtain the result file in Excel format. B) The Excel file contains the normalized Cq for each sample with histograms. C) The Excel file also contains the average results and the student test for each experimental group between the control group.    
       <img class="center" src="img/help.jpg" > 
     </div>
-  </div>     
-  <div style="padding-top:40px;margin: auto;width: 50%;text-align: center">
+  </div>      
+  <div style="padding-top:15px; border-bottom: 5px solid #000;"></div>
+  <div style="margin: auto;width: 100%;text-align: center">
+    
     Have a suggestion? <a href="mailto:jeremy.tournayre@inra.fr">Contact</a></br>
-    <img src="img/logo_INRA.png" width="144" height="59">
+    This tools is developed and maintained by
+    <a href="https://www6.clermont.inra.fr/unh_eng/Teams/PROSTEOSTASIS">Team Proteostasis</a> and
+    <a href="http://147.99.156.182/Intranet/web/UMRH/en/show/30">Team PIGALE</a>
+    <img src="img/logo_INRA.png" width="120" height="50"></br>
   </div>    
 </body>
 <script>
@@ -415,23 +375,32 @@ form{
   });
    
 </script>
+  </br>
   <div class="desc" >
     <button style='padding:10px' class='button' type="submit" id="License" name= "License">License agreement</button></br>
   </div>
-  <div hidden id="Licensediv" name= "Licensediv" >
+  <div hidden id="Licensediv" name= "Licensediv"  >
     <div class="License">
 Do my qPCR calculations is distributed under <a href="https://www.gnu.org/copyleft/gpl.html">the GNU public license</a>
 The source codes of Do my qPCR calculations will be freely available for non-commercial use on GitHub at <a href="https://github.com/JeremyTournayre/do_my_qPCRcalc">https://github.com/JeremyTournayre/do_my_qPCRcalc</a>, and are provided as-is without any warranty regarding reliability, accuracy and fitness for purpose. The user assumes the entire risk of the use of this program and the author can not be hold responsible of any kind of problems. 
     </div>  
+
+    </div>
+    <div style="padding-top:50px;">
+   
+    </div>    
 <script>
    
   $("#License").click(function(){
       $("#Licensediv").toggle( "slow" );
   });
-   
-</script>
-	
-
+    $('input[type="file"]').on('change', function(e){
+    var fileName = e.target.files[0].name;
+    if (fileName) {
+      $(e.target).parent().attr('data-message', fileName);
+    }
+  });
+  </script>
 </html>
 <?php
   }
