@@ -234,15 +234,23 @@
         <div class="form-control" data-message="Click to select file or drag and drop it here">
           <input  title="Click to select file or drag and drop it here" type="file" name="qPCRfile" id="document_file">
         </div>
-        <button class="buttonred" type="submit" name="action" style='padding:10px;' value="file">Submit </br>file</button>
-      </div>
-    </div>
+        <button class="buttonred" type="submit" name="action" style='padding:10px;' value="file">Submit </br>file</button> 
+      </div> 
+    </div>    
   </div>
+  </form> 
+  </br>     
+        <button class="buttonblue" name="action" style='padding:10px;' id="webform" name="webform" value="file">OR</br>Use the web form</button>
+
+  
+
   </div>
+</br>
+  <div hidden id="webformdiv" name= "webformdiv"  >
   <div style="width:80%;margin:auto;padding-top:20px; border-bottom: 5px solid #000;"></div>
   <div class="maDivjexcel" >
   <form class="temp" action="" method="POST" enctype="multipart/form-data">
-    OR copy paste your data below and <button class="buttonblue" type="submit" id="submit" name="action" value="in" style='padding:10px;'>Submit table</button>
+    Copy paste your data below and <button class="buttonblue" type="submit" id="submit" name="action" value="in" style='padding:10px;'>Submit table</button>
     
 <button class='button' style="padding:10px" onclick="$('#my').jexcel('insertColumn'); event.preventDefault(); return false;">+ column</button >
 <button class='button' style="padding:10px" onclick="$('#my').jexcel('insertRow'); event.preventDefault(); return false;">+ row</button >
@@ -282,7 +290,7 @@ function loadtemplate() {
 	  ],
       });
 }
-loadtemplate();
+
 function loadexample() {
    $('#my').html("");
     $('#my').jexcel({
@@ -306,7 +314,7 @@ function loadexample() {
 	],
     });
 }
-
+loadexample();
 
 $('#submit').on('click', function () {
 
@@ -316,8 +324,9 @@ $('#submit').on('click', function () {
 });
 </script>
    
-<p><button id='download'>Export this spreadsheet as TSV</button></p>
+<p><button class="button" id='download'>Export this spreadsheet as TSV</button></p>
 
+</div>
 </div>
 <script>
 $('#download').on('click', function () {
@@ -348,24 +357,41 @@ $('#download').on('click', function () {
   </script>
 
   <div class="desc"  >
-    <button style='padding:10px;' class='button' type="submit" id="help" name= "help">Description/Help</button></br>
+    <button style='padding:10px;' class='button' type="submit" id="help" name= "help">Description/Help</button>
+
+
+    <button style='padding:10px;' class='button' type="submit" id="flowchart" name= "help">Flowchart/Methods</button></br>
   </div>
-   
  
   <div hidden id="helpdiv" name= "helpdiv" >
     <div class="help">
+    Description/Help)</br>
 	  A) The input file has to be in .tsv, .xls, .xlsx. or .odt format. The first two lines are optional. The first defines the control group in B1 cell : the "A" group is choiced. The reference gene in D1 cell : the "RefGeneName" gene is selected. The second allows to define the qPCR efficiency for each gene written on the 3rd line. On the 3rd line there are 2 column headers : "Group" and "Sample" and then there are the genes: "RefGeneName", "TestGene1", "TestGene2". The other rows correspond to the data table : sample according to the Cq. Submitting this file to "do my qPCR calculation" allows you to obtain the result file in Excel format. B) The Excel file contains the normalized Cq for each sample with histograms. C) The Excel file also contains the average results and the student test for each experimental group between the control group.    
       <img class="center" src="img/help.jpg" > 
     </div>
-  </div>      
+  </div> 
+
+   
+ 
+  <div hidden id="flowchartdiv" name= "flowchartdiv" >
+    <div class="flowchart">
+      Flowchart/Methods)</br>
+      <img class="center" src="img/pipeline.png" > 
+    </div>
+  </div>         
   <div style="padding-top:15px; border-bottom: 5px solid #000;"></div>
   <div style="margin: auto;width: 100%;text-align: center">
     
     Have a suggestion? <a href="mailto:jeremy.tournayre@inra.fr">Contact</a></br>
-    This tools is developed and maintained by
-    <a href="https://www6.clermont.inra.fr/unh_eng/Teams/PROSTEOSTASIS">Team Proteostasis</a> and
-    <a href="http://147.99.156.182/Intranet/web/UMRH/en/show/30">Team PIGALE</a>
+    This tool is developed and maintained by
+    <a href="https://www6.clermont.inra.fr/unh_eng/Teams/PROSTEOSTASIS">Team Proteostasis</a><sup>1</sup> and
+    <a href="http://147.99.156.182/Intranet/web/UMRH/en/show/30">Team PIGALE</a><sup>2</sup>
     <img src="img/logo_INRA.png" width="120" height="50"></br>
+    </br>
+    <sup>1</sup>Université Clermont Auvergne, INRA, UNH, Unité de Nutrition Humaine, CRNH Auvergne, Clermont-Ferrand, France</br>
+    <sup>2</sup>Université Clermont Auvergne, VetAgro Sup, INRA, UMR1213, Unité Mixte de Recherche sur les Herbivores, Clermont-Ferrand, France
+
+    
   </div>    
 </body>
 <script>
@@ -373,7 +399,9 @@ $('#download').on('click', function () {
   $("#help").click(function(){
       $("#helpdiv").toggle( "slow" );
   });
-   
+     $("#flowchart").click(function(){
+      $("#flowchartdiv").toggle( "slow" );
+  });
 </script>
   </br>
   <div class="desc" >
@@ -390,7 +418,9 @@ The source codes of Do my qPCR calculations will be freely available for non-com
    
     </div>    
 <script>
-   
+   $("#webform").click(function(){
+      $("#webformdiv").toggle( "slow" );
+  });  
   $("#License").click(function(){
       $("#Licensediv").toggle( "slow" );
   });
