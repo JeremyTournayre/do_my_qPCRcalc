@@ -142,7 +142,7 @@
 ?>
 <html>
 <head>
-
+ <meta name="viewport" content="width=device-width, initial-scale=1">
 <link href="./style.css" rel="stylesheet"/>
 <script src="./jquery.min.js"></script>
  <script src="./jquery-csv-master/src/jquery.csv.js"></script>
