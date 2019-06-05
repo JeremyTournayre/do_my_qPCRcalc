@@ -22,10 +22,10 @@
       $filename="dmcq.xlsx";
       $randomstring=generateRandomString();
       $file_upload='upload/'.$randomstring;
-      $fichier=fopen($file_upload,'w+');
-      $texte=$_POST['txt'];
-      fwrite($fichier,$texte);
-      fclose($fichier);
+      $file_1=fopen($file_upload,'w+');
+      $text=$_POST['txt'];
+      fwrite($file_1,$text);
+      fclose($file_1);
        $file_name = $randomstring;
       $bool_ok=1;
 	  
