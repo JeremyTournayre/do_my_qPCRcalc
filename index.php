@@ -30,7 +30,9 @@
       $bool_ok=1;
 	  
    }
-   if(isset($_POST['example']) || isset($_POST['template']) || isset($_POST['exampods']) || isset($_POST['exampxlsx'])){
+   if(isset($_POST['example']) || isset($_POST['template']) || isset($_POST['exampods']) || isset($_POST['exampxlsx']) 
+   || isset($_POST['examplenone']) || isset($_POST['exampodsnone']) || isset($_POST['exampxlsxnone'])
+   || isset($_POST['examplemultiple']) || isset($_POST['exampodsmultiple']) || isset($_POST['exampxlsxmultiple'])){
 	if(isset($_POST['example'])){
 	  $file="example.tsv";
 	}
@@ -42,7 +44,25 @@
 	}
 	else if(isset($_POST['exampxlsx'])){
 	  $file="example.xlsx";
+	}
+	else if(isset($_POST['examplenone'])){
+	  $file="example_norefgene.tsv";
 	}	
+	else if(isset($_POST['exampodsnone'])){
+	  $file="example_norefgene.ods";
+	}
+	else if(isset($_POST['exampxlsxnone'])){
+	  $file="example_norefgene.xlsx";
+	}
+	else if(isset($_POST['examplemultiple'])){
+	  $file="example_multiplerefgenes.tsv";
+	}	
+	else if(isset($_POST['exampodsmultiple'])){
+	  $file="example_multiplerefgenes.ods";
+	}
+	else if(isset($_POST['exampxlsxmultiple'])){
+	  $file="example_multiplerefgenes.xlsx";
+	}		
 	else{
 	  exit;
 	}
@@ -218,13 +238,35 @@
   </script>
   </br>
     "Do my qPCR calculation" can automatically process qPCR raw data (Cq) to get the data normalization and graphical representation of the different samples in an Excel file (readable via Microsoft Office, LibreOffice...). This tool is also available on Github for installation and local use with or without web interface at https://github.com/JeremyTournayre/do_my_qPCRcalc.
-  <div class="maDiv">
+  <div class="maDiv2">
 
     <form class="temp" action="" method="POST" enctype="multipart/form-data">
-    <button style='padding:10px;' class="button" type="submit" id="template" name= "template">Template</button><span class="line-separator "></span ><button style='padding:10px;' class="button" type="submit" id="example" name= "example">Example.tsv</button>
-    <button style='padding:10px;' class="button" type="submit" id="exampxlsx" name= "exampxlsx">Example.xlsx</button>
-    <button style='padding:10px;' class="button" type="submit" id="exampods" name= "exampods">Example.ods</button><br><br>
+    
+    <button style='padding:10px;' class="button" type="submit" id="template" name= "template">Template</button><span class="whitspce-nowp"><span class="line-separator ">&nbsp;</span >
+    
+    Example:<button style='padding:10px;' class="button" type="submit" id="example" name= "example">.tsv</button>
+    <button style='padding:10px;' class="button" type="submit" id="exampxlsx" name= "exampxlsx">.xlsx</button>
+    <button style='padding:10px;' class="button" type="submit" id="exampods" name= "exampods">.ods</button>
+    </span>
+    
+    <span class="whitspce-nowp">
+    <span class="line-separator ">&nbsp;</span >
+    Without reference gene:
+    <button style='padding:10px;' class="button" type="submit" id="example" name= "examplenone">.tsv</button>
+    <button style='padding:10px;' class="button" type="submit" id="exampxlsx" name= "exampxlsxnone">.xlsx</button>
+    <button style='padding:10px;' class="button" type="submit" id="exampods" name= "exampodsnone">.ods</button>
+    </span>
+    
+    <span class="whitspce-nowp">
+    <span class="line-separator ">&nbsp;</span >
+    With multiple reference genes:
+    <button style='padding:10px;' class="button" type="submit" id="example" name= "examplemultiple">.tsv</button>
+    <button style='padding:10px;' class="button" type="submit" id="exampxlsx" name= "exampxlsxmultiple">.xlsx</button>
+    <button style='padding:10px;' class="button" type="submit" id="exampods" name= "exampodsmultiple">.ods</button><br><br>
+    </span>
   </form>
+  </div>
+  <div class="maDiv">
   <form class="temp" action="" method="POST" enctype="multipart/form-data">
 <div class="form-group file-upload">
     
@@ -254,9 +296,11 @@
     
 <button class='button' style="padding:10px" onclick="$('#my').jexcel('insertColumn'); event.preventDefault(); return false;">+ column</button >
 <button class='button' style="padding:10px" onclick="$('#my').jexcel('insertRow'); event.preventDefault(); return false;">+ row</button >
-  
-<button class='button' style="padding:10px" onclick="loadtemplate();event.preventDefault(); return false;">Load template</button >
-<button class='button' style="padding:10px" onclick="loadexample();event.preventDefault(); return false;">Load example</button >    
+</br>Load:   
+<button class='button' style="padding:10px" onclick="loadtemplate();event.preventDefault(); return false;">template</button >
+<button class='button' style="padding:10px" onclick="loadexample();event.preventDefault(); return false;">example</button >   
+<button class='button' style="padding:10px" onclick="loadexample_norefgene();event.preventDefault(); return false;">example without reference gene</button >   
+<button class='button' style="padding:10px" onclick="loadexample_multiplerefgenes();event.preventDefault(); return false;">example with multiple reference genes</button >   
   </br>
     <div id="my"  class="jexcel" ></div>
     <textarea id='txt' name="txt" style='width:400px;height:120px;display:none;'></textarea>
@@ -272,7 +316,7 @@ function loadtemplate() {
 	  csvHeaders:false,
 	  separator:'\t',
 	  delimiter:'\t',
-	  colWidths: [150,200,200,200,100,100,100,100,100,100],
+	  colWidths: [150,200,200,400,100,100,100,100,100,100],
 	  minDimensions:[10,5],
 	  csvFileName:"dmcq.tsv",
 	  style:[
@@ -280,6 +324,7 @@ function loadtemplate() {
 	      { B1: 'background-color: FFFDA5; ' },
 	      { C1: 'font-weight: bold;background-color: orange; ' },
 	      { D1: 'background-color: FFFDA5; ' },
+	      { E1: 'background-color: FFFDA5; ' },
 	      { C2: 'background-color: FFFDA5; ' },
 	      { D2: 'background-color: FFFDA5; ' },
 	      { E2: 'background-color: FFFDA5; ' },
@@ -290,6 +335,57 @@ function loadtemplate() {
 	  ],
       });
 }
+
+function loadexample_multiplerefgenes() {
+   $('#my').html("");
+    $('#my').jexcel({
+      csv:'./example_multiplerefgenes.tsv',
+	csvHeaders:false,
+	separator:'\t',
+	delimiter:'\t',
+	colWidths: [150,100,150,150,150,100,100,100,100,100],
+	minDimensions:[10,5],
+	csvFileName:"dmcq.tsv",
+	style:[
+	    { A1: 'font-weight: bold;background-color: orange; ' },
+	    { B1: 'background-color: FFFDA5; ' },
+	    { C1: 'font-weight: bold;background-color: orange; ' },
+	    { D1: 'background-color: FFFDA5; ' },
+	    { E1: 'background-color: FFFDA5; ' },
+	    { F2: 'background-color: FFFDA5; ' },
+	    { A2: 'font-weight: bold;background-color: orange; ' },
+	    { A3: 'font-weight: bold; background-color: orange; ' },
+	    { B3: 'font-weight: bold; background-color: orange; ' }
+
+	],
+    });
+}
+loadexample();
+
+function loadexample_norefgene() {
+   $('#my').html("");
+    $('#my').jexcel({
+      csv:'./example_norefgene.tsv',
+	csvHeaders:false,
+	separator:'\t',
+	delimiter:'\t',
+	colWidths: [150,100,150,150,100,100,100,100,100,100],
+	minDimensions:[10,5],
+	csvFileName:"dmcq.tsv",
+	style:[
+	    { A1: 'font-weight: bold;background-color: orange; ' },
+	    { B1: 'background-color: FFFDA5; ' },
+	    { C1: 'font-weight: bold;background-color: orange; ' },
+	    { D1: 'background-color: FFFDA5; ' },
+	    { E2: 'background-color: FFFDA5; ' },
+	    { A2: 'font-weight: bold;background-color: orange; ' },
+	    { A3: 'font-weight: bold; background-color: orange; ' },
+	    { B3: 'font-weight: bold; background-color: orange; ' }
+
+	],
+    });
+}
+loadexample();
 
 function loadexample() {
    $('#my').html("");

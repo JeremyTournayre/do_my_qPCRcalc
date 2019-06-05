@@ -1,4 +1,4 @@
-Control group	A	Reference gene(s)	RefGeneName	
+Control group	A	Reference gene(s)	none	
 qPCR Efficiency				1.9
 Group	Sample	RefGeneName	TestGene1	TestGene2
 A	a1	20.96	21.77	20.84

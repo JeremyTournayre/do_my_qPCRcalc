@@ -1,3 +1,7 @@
+.whitspce-nowp{
+  white-space:nowrap;
+}
+
 .input-group {
   position: relative;
   display: -ms-flexbox;
@@ -80,6 +84,11 @@ font: 400 15px Arial;
   margin:0 auto;max-width:50%;
     text-align:center;
 }
+.maDiv2 {
+ padding-top:10;
+  margin:0 auto;max-width:100%;
+    text-align:center;
+}
 .maDivjexcel {
  
  padding:30;
@@ -92,6 +101,11 @@ overflow:scroll;max-width:100%;height:500px;
 }
 @media screen and (max-width: 800px) {
   
+  
+.whitspce-nowp{
+  white-space:normal;
+}
+
   .desc{
  padding-top:10px;
      margin-top:10px;
@@ -123,21 +137,18 @@ height:200px;
     margin-bottom:15px;
     display: block;
     text-align: left;
-    font-size:35px;
   }
     .buttonred {
     width:100%;
     margin-bottom:15px;
     display: block;
     text-align: left;
-    font-size:35px;
   }
    .buttonblue {
     width:100%;
     margin-bottom:15px;
     display: block;
     text-align: left;
-    font-size:35px;
   }
 
 
@@ -299,7 +310,6 @@ form{
 h3, p {
   text-align: center;
 }
-
 
 
 .file-upload .form-control {

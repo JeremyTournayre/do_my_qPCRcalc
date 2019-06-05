@@ -59,7 +59,7 @@ my %order_lot;
 my $nb_lot=0;
 my %list_sample;
 my $lot_controle_choose="";
-my $entete_norma_val_choose="";
+my %entete_norma_val_choose;
 #Reading the file
 
 while (<F>){
@@ -98,6 +98,7 @@ while (<F>){
 				  $entete_norma_val=$entete{$i};
 				  $entete_norma{$entete{$i}}=1;
 				  $bool_recup_entetenorma=1;
+				  
 			  }	
 			}
 			$i++;
@@ -108,7 +109,18 @@ while (<F>){
 	elsif ($_=~m/^Control/i){
 	  my @split=split("\t",$_);
 	  $lot_controle_choose=$split[1];
-	  $entete_norma_val_choose=uc($split[3]);
+	  my $max=$#split;
+	  if ($max <3){
+	    $max=3;
+	  }
+	  for (my $j=3;$j<=$max;$j++){
+	    if (!defined($split[$j])){
+	      $entete_norma_val_choose{""}=1;
+	    }	    
+	    else{
+	      $entete_norma_val_choose{uc($split[$j])}=1;
+	    }
+	  }
 	}
 	elsif ($_=~m/^qPCR efficiency/i){
 		my $i=0;
@@ -214,12 +226,27 @@ foreach (keys %efficiency){
 if (defined($lots{$lot_controle_choose})){
   $lot_controle=$lot_controle_choose;
 }
-if (defined($entetes{$entete_norma_val_choose})){
-  $entete_norma_val=$entete_norma_val_choose;
-  %entete_norma=();
-  $entete_norma{$entete_norma_val}=1;
+my $bool_efface_entete_norma=0;
+my $multiple_entete_norma=0;
+foreach (keys %entete_norma_val_choose){
+  my $a_entete_norma_val_choose=$_;
+  if (defined($entetes{$a_entete_norma_val_choose}) || ($a_entete_norma_val_choose eq "NONE")){
+    if ($bool_efface_entete_norma == 0){
+      %entete_norma=();
+      $bool_efface_entete_norma=1;
+    }  
+    $entete_norma_val=$a_entete_norma_val_choose;
+    $entete_norma{$entete_norma_val}=1;
+    $multiple_entete_norma++;
+  }
 }
 
+if ($multiple_entete_norma>=1 && defined( $entete_norma{"NONE"})){
+  %entete_norma=();
+  $entete_norma_val="NONE";
+  $entete_norma{"NONE"}=1;
+  $multiple_entete_norma=-1;
+}
 
 
 #calculation of the CT delta and the qty
@@ -233,6 +260,7 @@ foreach (sort keys %data){
 				my $souris=$_;
 				foreach (sort keys %{$data{$entete_sansoption}{$lot}{$groupe}{$souris}}){
 					my $option=$_;
+					
 					if ( $data{$entete_sansoption}{$lot}{$groupe}{$souris}{$option}{"Ct"} eq "NA"){next;}
 					if (!defined($moyenne_A{$entete_sansoption}{$groupe}{$option}{"nb"})){
 						my $row=0;
@@ -250,12 +278,39 @@ foreach (sort keys %data){
 					else{
 					  $qte=1.85**$delta_ct;
 					}
+# 					print '$data{'.$entete_sansoption.'}{'.$lot.'}{'.$groupe.'}{'.$souris.'}{'.$option.'}{"Qté"}'.'='.$qte."\n";
 					$data{$entete_sansoption}{$lot}{$groupe}{$souris}{$option}{"Qté"}=$qte;
-				}						
+					
+					if (defined($entete_norma{$entete_sansoption})){
+					
+					  if (!defined($data{"moyenne"}{$lot}{$groupe}{$souris}{$option}{"nb"})){
+					    $data{"moyenne"}{$lot}{$groupe}{$souris}{$option}{"nb"}=0;
+					    $data{"moyenne"}{$lot}{$groupe}{$souris}{$option}{"ajout"}=0;
+					  }
+					  $data{"moyenne"}{$lot}{$groupe}{$souris}{$option}{"ajout"}+=$qte;
+					  $data{"moyenne"}{$lot}{$groupe}{$souris}{$option}{"nb"}++;
+					}
+				}
+		
 			}					
 		}			
 	}	
 }
+
+####Moyenne des gènes de références
+
+foreach (keys %{$data{"moyenne"}}){
+  my $lot=$_;
+  foreach (keys %{$data{"moyenne"}{$lot}}){
+    my $groupe=$_;
+    foreach (keys %{$data{"moyenne"}{$lot}{$groupe}}){
+      my $souris=$_;
+      $data{"moyenne"}{$lot}{$groupe}{$souris}{""}{"Qté"}=$data{"moyenne"}{$lot}{$groupe}{$souris}{""}{"ajout"}/$data{"moyenne"}{$lot}{$groupe}{$souris}{""}{"nb"};
+    }
+  }
+}
+
+
 
 
 
@@ -360,7 +415,18 @@ foreach (sort {$a <=> $b} keys %list_entete){
 	  $eff=1.85;
 	}
 	$worksheet->write( $row, $col, "Quantification (efficiency: ".$eff.")");$col++;
-	$worksheet->write( $row, $col, "Normalization by ".$entete_norma_val);$col++;
+	if (defined($entete_norma{$entete})){
+	  $worksheet->write( $row, $col, "This is a reference gene");$col++;
+	}
+	elsif ($multiple_entete_norma <0){
+	  $worksheet->write( $row, $col, "There is no reference gene");$col++;
+	}	
+	elsif ($multiple_entete_norma <=1){
+	  $worksheet->write( $row, $col, "Normalization by ".$entete_norma_val);$col++;
+	}
+	else{
+	  $worksheet->write( $row, $col, "Normalization by the average of the reference genes");$col++;
+	}
 	$worksheet->write( $row, $col, "Log2");$col++;	
 	$row++;	$col=0;
 	my $chart     = $workbook->add_chart( embedded => 1  ,type => 'column' );
@@ -393,12 +459,15 @@ foreach (sort {$a <=> $b} keys %list_entete){
 					}
 					foreach (sort keys %entete_norma){
 						my $the_entete_norma=$_;
+						if (defined($data{"moyenne"})){
+						    $the_entete_norma="moyenne";
+						}
 						my $normalisation;
 						if (defined($entete_norma{$entete})){
 							$normalisation=$data{$entete}{$lot}{$groupe}{$souris}{$option}{"Qté"};
 							$the_entete_norma="";
 						}
-						if (defined($entete_norma{$entete}) || (defined($data{$the_entete_norma}) 
+						if ($entete_norma_val eq "NONE" || defined($entete_norma{$entete}) || (defined($data{$the_entete_norma}) 
 							&& defined($data{$the_entete_norma}{$lot}) 
 							&& defined($data{$the_entete_norma}{$lot}{$groupe}) 
 							&& defined($data{$the_entete_norma}{$lot}{$groupe}{$souris})
@@ -420,10 +489,16 @@ foreach (sort {$a <=> $b} keys %list_entete){
 								$row++;	$col=0;
 								$string.='{ fill => { color => \''.$colors{$lot}.'\' }},';	
 							}	
-							else{						
-								if (!defined($entete_norma{$entete})){											
+							else{	
+							
+								if ($entete_norma_val eq "NONE"){
+									$normalisation=$data{$entete}{$lot}{$groupe}{$souris}{$option}{"Qté"};
+								}
+								elsif (!defined($entete_norma{$entete})){											
 									$normalisation=$data{$entete}{$lot}{$groupe}{$souris}{$option}{"Qté"}/$data{$the_entete_norma}{$lot}{$groupe}{$souris}{""}{"Qté"};
-								}	
+								}
+								
+							
 								$tmp_normalisation=$normalisation;						
 								$normalisation=log2($normalisation);
 							   
@@ -483,6 +558,9 @@ foreach (sort {$a <=> $b} keys %list_entete){
 							}
 						}
 						if (defined($entete_norma{$entete})){
+							last;
+						}	
+						if (defined($data{"moyenne"})){
 							last;
 						}						
 					}
