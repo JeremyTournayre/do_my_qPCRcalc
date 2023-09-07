@@ -125,9 +125,11 @@
       if ($bool_ok==1){
       //print $file_name;exit;
 	    exec("perl qPCR_2_graph.pl $file_name");
+		$date=date("Y-m-d").'_'.date("H-i-s-").explode(" ",microtime())[0];
+		exec("touch count_upload/".$date);
 	    $file="download/".$file_name."-dmqc.xlsx";
 	    if (file_exists($file_upload)){
-	      unlink($file_upload);
+	      #unlink($file_upload);
 	    }
 	    if (file_exists($file_upload.'.txt')){
 	      unlink($file_upload.'.txt');
@@ -238,6 +240,10 @@
   </script>
   </br>
     "Do my qPCR calculation" can automatically process qPCR raw data (Cq) to get the data normalization and graphical representation of the different samples in an Excel file (readable via Microsoft Office, LibreOffice...). This tool is also available on Github for installation and local use with or without web interface at https://github.com/JeremyTournayre/do_my_qPCRcalc.
+  </br></br>
+    Please cite "Do my qPCR calculation":</br>
+    Tournayre, J., Reichstadt, M., Parry, L., Fafournoux, P., and Jousse, C. (2019). “Do my qPCR calculation”, a web tool. Bioinformation 15, 369–372.
+    <a href="http://www.bioinformation.net/015/97320630015369.pdf">Link to the article</a>
   <div class="maDiv2">
 
     <form class="temp" action="" method="POST" enctype="multipart/form-data">
@@ -360,7 +366,6 @@ function loadexample_multiplerefgenes() {
 	],
     });
 }
-loadexample();
 
 function loadexample_norefgene() {
    $('#my').html("");
@@ -385,7 +390,6 @@ function loadexample_norefgene() {
 	],
     });
 }
-loadexample();
 
 function loadexample() {
    $('#my').html("");
