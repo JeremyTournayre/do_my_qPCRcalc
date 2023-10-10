@@ -3,8 +3,6 @@
   // launch the perl script to compute and create the Excel file containing the results,
   // send the Excel file to the user  
   
-  
-  
   function generateRandomString($length = 10) {
       $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
       $charactersLength = strlen($characters);
@@ -125,9 +123,15 @@
       if ($bool_ok==1){
       //print $file_name;exit;
 	    exec("perl qPCR_2_graph.pl $file_name");
+		if ($_POST["Pffafl_o_Livak"]=="Livak"){
+		    exec("perl qPCR_2_graph_2.pl $file_name 1");
+		    $file="download/".$file_name."_Livak-dmqc.xlsx";
+		}else{
+		    exec("perl qPCR_2_graph_2.pl $file_name 0");
+		    $file="download/".$file_name."-dmqc.xlsx";
+		}
 		$date=date("Y-m-d").'_'.date("H-i-s-").explode(" ",microtime())[0];
 		exec("touch count_upload/".$date);
-	    $file="download/".$file_name."-dmqc.xlsx";
 	    if (file_exists($file_upload)){
 	      #unlink($file_upload);
 	    }
@@ -154,6 +158,7 @@
 
 	    }
 	    else{
+			echo $_POST["Pffafl_o_Livak"];
 		    echo "Failed";
 	    }
 
@@ -275,7 +280,6 @@
   <div class="maDiv">
   <form class="temp" action="" method="POST" enctype="multipart/form-data">
 <div class="form-group file-upload">
-    
     <div class="cols-sm-9">
       <div class="input-group">
         
@@ -283,9 +287,25 @@
           <input  title="Click to select file or drag and drop it here" type="file" name="qPCRfile" id="document_file">
         </div>
         <button class="buttonred" type="submit" name="action" style='padding:10px;' value="file">Submit </br>file</button> 
-      </div> 
-    </div>    
-  </div>
+		<div class="form-group">
+			<div>
+				<label>
+				<input type="radio" name="Pffafl_o_Livak" value="Pffafl" checked> Pffafl
+				</label>
+			</div>
+			<div>
+				<label>
+				<input type="radio" name="Pffafl_o_Livak" value="Livak"> Livak
+				</label>
+			</div>
+		</div>	 
+	   </div>  
+	</div>    
+</div>    
+
+
+
+
   </form> 
   </br>     
         <button class="buttonblue" name="action" style='padding:10px;' id="webform" name="webform" value="file">OR</br>Use the web form</button>
@@ -299,6 +319,12 @@
   <div class="maDivjexcel" >
   <form class="temp" action="" method="POST" enctype="multipart/form-data">
     Copy paste your data below and <button class="buttonblue" type="submit" id="submit" name="action" value="in" style='padding:10px;'>Submit table</button>
+	<label>
+		<input type="radio" name="Pffafl_o_Livak" value="Pffafl" checked> Pffafl
+	</label>
+	<label>
+		<input type="radio" name="Pffafl_o_Livak" value="Livak"> Livak
+	</label>
     
 <button class='button' style="padding:10px" onclick="$('#my').jexcel('insertColumn'); event.preventDefault(); return false;">+ column</button >
 <button class='button' style="padding:10px" onclick="$('#my').jexcel('insertRow'); event.preventDefault(); return false;">+ row</button >
