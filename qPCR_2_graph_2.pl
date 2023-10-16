@@ -476,6 +476,13 @@ foreach (sort {$a <=> $b} keys %list_header){
 		}
 		$worksheet->write( $row, $col, "Log2");$col++;	
 	}else{
+		my $eff="";
+		if (defined($efficiency{$header})){
+		$eff=$efficiency{$header};
+		}
+		else{
+		$eff=1.85;
+		}
 		if ($multiple_header_norma <0){
 			$worksheet->write( $row, $col, "There is no reference gene");$col++;
 		}	
@@ -484,7 +491,7 @@ foreach (sort {$a <=> $b} keys %list_header){
 		}
 		$worksheet->write( $row, $col, "Average ".$group2_control." delta Cq");$col++;							
 		$worksheet->write( $row, $col, "delta delta Cq");$col++;							
-		$worksheet->write( $row, $col, "fold change (2^-delta delta Ct)");$col++;	
+		$worksheet->write( $row, $col, "fold change (".$eff."^-delta delta Ct)");$col++;	
 		$worksheet->write( $row, $col, "Log2");$col++;							
 	}
 	$row++;	$col=0;
@@ -574,7 +581,13 @@ foreach (sort {$a <=> $b} keys %list_header){
 									$normalisation=log2($normalisation);
 								}
 								else{
-									$normalisation= 2 ** -$pre_normalisation;
+									# $normalisation= 2 ** -$pre_normalisation;
+									if (defined($efficiency{$header})){
+										$normalisation=$efficiency{$header}**-$pre_normalisation;
+									}
+									else{
+										$normalisation=1.85**-$pre_normalisation;
+									}									
 									$tmp_normalisation=$normalisation;						
 									$normalisation=log2($normalisation);
 								}
@@ -728,10 +741,13 @@ foreach (sort {$a <=> $b} keys %list_header){
 			  $average{"all"}{$_}{"pvalue_qty"}="NA";
 			}
 			else{
-
-			  $ttest->load_data(\@array1,\@array2);  
-			  my $pvalue=$ttest->t_prob;
-			  $average{"all"}{$_}{"pvalue_qty"}=$pvalue;
+				if ($multiple_header_norma<=1 && $methode_Livak==1 && defined($header_norma{$header})){
+					$average{"all"}{$_}{"pvalue_qty"}="NA";
+				}else{
+					$ttest->load_data(\@array1,\@array2);  
+					my $pvalue=$ttest->t_prob;
+					$average{"all"}{$_}{"pvalue_qty"}=$pvalue;
+				}
 			}
 		}
 
@@ -748,9 +764,13 @@ foreach (sort {$a <=> $b} keys %list_header){
 			  $average{"all"}{$_}{"pvalue_log2"}="NA";
 			}
 			else{
-			  $ttest->load_data(\@array1,\@array2);  
-			  my $pvalue=$ttest->t_prob;
-			  $average{"all"}{$_}{"pvalue_log2"}=$pvalue;
+				if ($multiple_header_norma<=1 && $methode_Livak==1 && defined($header_norma{$header})){
+					$average{"all"}{$_}{"pvalue_log2"}="NA";
+				}else{
+					$ttest->load_data(\@array1,\@array2);  
+					my $pvalue=$ttest->t_prob;
+					$average{"all"}{$_}{"pvalue_log2"}=$pvalue;
+				}				
 			 }
 		}
 	
