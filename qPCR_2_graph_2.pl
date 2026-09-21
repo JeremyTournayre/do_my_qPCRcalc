@@ -69,7 +69,9 @@ while (<F>){
 	if ($_=~m/^\s+$/ || $_=~m/^\s*\t/){
 	  next;
 	}
-	
+
+    $_ =~ s/,/./g;
+
 	my @tab=split("\t",$_);
 	#Suppression of spaces in values
 	my @tab2;

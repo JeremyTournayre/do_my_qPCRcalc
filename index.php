@@ -80,7 +80,6 @@
    }
    else if($_POST['action'] == 'file' && isset($_FILES['qPCRfile']) && isset( $_FILES['qPCRfile']['name']) &&  $_FILES['qPCRfile']['name']!=""){
 	  $file_name = $_FILES['qPCRfile']['name'];
-	
 	  $errors= array();
 	
 	  $explod=explode('.',$file_name);
@@ -95,7 +94,7 @@
 	  }
 	  $file_name=$new_file_name;
 	  $file_name=preg_replace('/[^A-Za-z0-9\-]/', '', $file_name); // Removes special chars.
-
+	  if ($file_name === "") { $file_name = generateRandomString(); }
 	  $file_size =$_FILES['qPCRfile']['size'];
 	  $file_tmp =$_FILES['qPCRfile']['tmp_name'];
 	  $file_type=$_FILES['qPCRfile']['type'];
@@ -105,7 +104,7 @@
 	  $max_size=5000000;
 	  $bool_ok=0;
 	  if ($file_size>$max_size){
-		print "file_size : ".$file_size." octets must be < max_size : ".$max_size." octets</br>";
+		print "file_size : ".$file_size." octets must be < max_size : ".$max_size." octets</br>";exit;
 		
 	  }
 	  while(file_exists($file_upload)){
@@ -122,12 +121,12 @@
       }
       if ($bool_ok==1){
       //print $file_name;exit;
-	    exec("perl qPCR_2_graph.pl $file_name");
+	    // exec("perl qPCR_2_graph.pl $file_name");
 		if ($_POST["Pffafl_o_Livak"]=="Livak"){
-		    exec("perl qPCR_2_graph_2.pl $file_name 1");
+			exec("perl qPCR_2_graph_2.pl " . escapeshellarg($file_name) . " 1");
 		    $file="download/".$file_name."_Livak-dmqc.xlsx";
 		}else{
-		    exec("perl qPCR_2_graph_2.pl $file_name 0");
+			exec("perl qPCR_2_graph_2.pl " . escapeshellarg($file_name) . " 0");
 		    $file="download/".$file_name."-dmqc.xlsx";
 		}
 		$date=date("Y-m-d").'_'.date("H-i-s-").explode(" ",microtime())[0];

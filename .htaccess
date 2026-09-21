@@ -1,0 +1,11 @@
+RewriteEngine On
+RewriteCond %{HTTP_HOST} ^www\.qpcr-calcul\.clermont\.inrae\.fr$ [NC]
+RewriteRule ^(.*)$ https://qpcr-calcul.clermont.inrae.fr/$1 [L,R=301]
+
+Options -Indexes
+
+# Bloquer .git et les scripts/fichiers internes
+RedirectMatch 404 /\.git
+<FilesMatch "\.(pl|md)$|^\.gitignore$">
+    Require all denied
+</FilesMatch>
