@@ -1,3 +1,5 @@
 count_upload
-download
-upload
+download/*
+upload/*
+!download/.htaccess
+!upload/.htaccess

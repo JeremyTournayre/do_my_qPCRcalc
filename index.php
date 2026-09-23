@@ -122,7 +122,8 @@
       if ($bool_ok==1){
       //print $file_name;exit;
 	    // exec("perl qPCR_2_graph.pl $file_name");
-		if ($_POST["Pffafl_o_Livak"]=="Livak"){
+		$methode=in_array($_POST["Pffafl_o_Livak"], array("Pffafl","Livak"), true) ? $_POST["Pffafl_o_Livak"] : "Pffafl";
+		if ($methode=="Livak"){
 			exec("perl qPCR_2_graph_2.pl " . escapeshellarg($file_name) . " 1");
 		    $file="download/".$file_name."_Livak-dmqc.xlsx";
 		}else{
@@ -157,7 +158,7 @@
 
 	    }
 	    else{
-			echo $_POST["Pffafl_o_Livak"];
+			echo htmlspecialchars($methode, ENT_QUOTES, 'UTF-8');
 		    echo "Failed";
 	    }
 
