@@ -14,6 +14,11 @@ use Statistics::TTest;
 ###############################################################################################
 ###############################################################################################
 
+#Validate the filename argument before using it in any shell command or file path.
+if (!defined($ARGV[0]) || $ARGV[0] !~ /^[A-Za-z0-9_-]+$/){
+	die "Invalid file name argument\n";
+}
+
 #Function to calculate the log2
 sub log2 {
 	my $n = shift(@_);
