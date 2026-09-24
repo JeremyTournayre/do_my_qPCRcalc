@@ -2,6 +2,10 @@ RewriteEngine On
 RewriteCond %{HTTP_HOST} ^www\.qpcr-calcul\.clermont\.inrae\.fr$ [NC]
 RewriteRule ^(.*)$ https://qpcr-calcul.clermont.inrae.fr/$1 [L,R=301]
 
+# Forcer HTTPS sur le domaine canonique
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://qpcr-calcul.clermont.inrae.fr/$1 [L,R=301]
+
 Options -Indexes
 
 # Bloquer .git et les scripts/fichiers internes
@@ -9,3 +13,13 @@ RedirectMatch 404 /\.git
 <FilesMatch "\.(pl|md)$|^\.gitignore$">
     Require all denied
 </FilesMatch>
+
+# En-tetes de securite HTTP
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; base-uri 'self'; frame-ancestors 'self'"
+    # A activer seulement une fois HTTPS confirme fonctionnel sur tout le site :
+    # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+</IfModule>
