@@ -102,3 +102,20 @@ disable_functions = system,passthru,shell_exec,proc_open,popen,pcntl_exec
   must be downloaded.
 - `upload/`, `download/`, `count_upload/`, `.git/config` and `qPCR_2_graph_2.pl` must
   return 403 or 404 in a browser.
+
+## Non-regression test
+
+`tests/non_regression/run.py` sends every example file (3 data sets, `.tsv`/`.xlsx`/`.ods`,
+Pfaffl and Livak, plus the copy-paste form: 20 cases) to a running site and checks that the
+returned Excel files have the same content as `tests/non_regression/expected/`. Run it before
+and after any change to the server (PHP or Perl update) or to the code. It needs `curl` and
+the Python package `openpyxl`.
+
+```bash
+python tests/non_regression/run.py                        # https://qpcr-calcul.clermont.inrae.fr/
+python tests/non_regression/run.py https://my-server/     # another installation
+python tests/non_regression/run.py --update               # results changed on purpose: new reference
+```
+
+Each run adds 20 files to `upload/` (`NONREG-*` and 2 random names) and 20 entries to
+`count_upload/` on the server.

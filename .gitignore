@@ -3,3 +3,4 @@ download/*
 upload/*
 !download/.htaccess
 !upload/.htaccess
+__pycache__/
