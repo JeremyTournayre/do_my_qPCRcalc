@@ -12,7 +12,6 @@ Each run adds 20 files to upload/ (named NONREG-*, plus 2 random names for the
 copy-paste form) and 20 entries to count_upload/ on the server.
 """
 import os
-import re
 import subprocess
 import sys
 import tempfile
@@ -53,12 +52,6 @@ def cells(xlsx):
     return "\n".join(lines) + "\n"
 
 
-def normalize(text):
-    # With several reference genes, the "delta Cq by <gene>" title names one of them
-    # at random (Perl hash order); the values do not change.
-    return re.sub(r"delta Cq by [^']*", "delta Cq by REF", text)
-
-
 def main():
     args = [a for a in sys.argv[1:] if a != "--update"]
     update = "--update" in sys.argv
@@ -85,7 +78,7 @@ def main():
                 failures += 1
             else:
                 with open(expected_file, encoding="utf-8") as f:
-                    same = normalize(f.read()) == normalize(got)
+                    same = f.read() == got
                 print(f"{'OK' if same else 'DIFFERENT':12s}{name}")
                 failures += not same
     if not update:

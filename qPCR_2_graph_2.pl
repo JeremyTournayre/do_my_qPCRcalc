@@ -493,8 +493,11 @@ foreach (sort {$a <=> $b} keys %list_header){
 		if ($multiple_header_norma <0){
 			$worksheet->write( $row, $col, "There is no reference gene");$col++;
 		}	
-		else{
+		elsif ($multiple_header_norma <=1){
 			$worksheet->write( $row, $col, "delta Cq by ".$header_norma_val);$col++;
+		}
+		else{
+			$worksheet->write( $row, $col, "delta Cq by the average of the reference genes");$col++;
 		}
 		$worksheet->write( $row, $col, "Average ".$group2_control." delta Cq");$col++;							
 		$worksheet->write( $row, $col, "delta delta Cq");$col++;							
@@ -540,7 +543,7 @@ foreach (sort {$a <=> $b} keys %list_header){
 							if ($methode_Livak==0){
 								$normalisation=$data{$header}{$group2}{$group}{$mouse}{$option}{"Qty"};
 							}else{
-								$pre_normalisation=$data{$header}{$group2}{$group}{$mouse}{$option}{"Li_delta_ct"};
+								$pre_normalisation=$data{$header}{$group2}{$group}{$mouse}{$option}{"Li_delta_ct"}-($data{$header}{"average"}{$group}{$option}{"add"}/$data{$header}{"average"}{$group}{$option}{"nb"});
 							}
 							$the_header_norma="";
 						}
